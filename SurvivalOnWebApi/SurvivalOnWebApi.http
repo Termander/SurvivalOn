@@ -1,0 +1,6 @@
+@SurvivalOnWebApi_HostAddress = http://localhost:5037
+
+GET {{SurvivalOnWebApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

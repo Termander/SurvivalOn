@@ -5,6 +5,8 @@ VisualStudioVersion = 17.14.36127.28
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SurvivalOn", "SurvivalOn\SurvivalOn.csproj", "{8437B5B7-9581-44AF-B01C-CDE950189188}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SurvivalOnWebApi", "SurvivalOnWebApi\SurvivalOnWebApi.csproj", "{DCAB76F7-85C0-41E7-9D07-2E9B49B05A2A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{8437B5B7-9581-44AF-B01C-CDE950189188}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8437B5B7-9581-44AF-B01C-CDE950189188}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8437B5B7-9581-44AF-B01C-CDE950189188}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DCAB76F7-85C0-41E7-9D07-2E9B49B05A2A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DCAB76F7-85C0-41E7-9D07-2E9B49B05A2A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DCAB76F7-85C0-41E7-9D07-2E9B49B05A2A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DCAB76F7-85C0-41E7-9D07-2E9B49B05A2A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
