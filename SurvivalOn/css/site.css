@@ -1,0 +1,17 @@
+﻿.location-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+.location-image img {
+    display: block;
+    width: 400px;
+    height: 400px;
+    object-fit: cover;
+}
+
+.location-description {
+    flex: 1;
+}

@@ -1,0 +1,87 @@
+@layout EmptyLayout
+@page "/"
+@page "/login"
+
+<style>
+.splash-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #2e3c4f 0%, #4e6e8e 100%);
+}
+.splash-box {
+    background: #fff;
+    padding: 2.5rem 2rem;
+    border-radius: 16px;
+    box-shadow: 0 4px 32px rgba(0,0,0,0.15);
+    min-width: 320px;
+    max-width: 90vw;
+}
+.splash-box h1 {
+    text-align: center;
+    margin-bottom: 1rem;
+    color: #2e3c4f;
+}
+.splash-box h3 {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    color: #4e6e8e;
+}
+</style>
+
+<div class="splash-container">
+    <div class="splash-box">
+        <h1>SurvivalOn</h1>
+        <h3>Login</h3>
+        <EditForm Model="@loginModel" OnValidSubmit="HandleLogin">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+            <div class="form-group">
+                <label for="username">Username</label>
+                <InputText id="username" class="form-control" @bind-Value="loginModel.Username" />
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <InputText id="password" type="password" class="form-control" @bind-Value="loginModel.Password" />
+            </div>
+            <button type="submit" class="btn btn-primary w-100 mt-3">Login</button>
+            <button type="button" class="btn btn-secondary w-100 mt-2" @onclick="HandleRegister">Register</button>
+        </EditForm>
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="alert alert-danger mt-3">@errorMessage</div>
+        }
+    </div>
+</div>
+
+@code {
+    private LoginModel loginModel = new();
+    private string? errorMessage;
+
+    private void HandleLogin()
+    {
+        // TODO: Replace with real authentication logic
+        if (loginModel.Username == "player" && loginModel.Password == "password")
+        {
+            errorMessage = null;
+            // Redirect or set authentication state here
+        }
+        else
+        {
+            errorMessage = "Invalid username or password.";
+        }
+    }
+
+    private void HandleRegister()
+    {
+        // TODO: Navigate to registration page or show registration form
+        errorMessage = "Registration is not implemented yet.";
+    }
+
+    public class LoginModel
+    {
+        public string Username { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+    }
+}

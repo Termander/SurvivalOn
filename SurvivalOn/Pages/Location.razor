@@ -1,0 +1,145 @@
+@page "/location"
+@using SurvivalOn.Models
+
+@* Assume you have a Location object called CurrentLocation *@
+
+<div class="location-layout">
+    <div class="location-header">
+        <div class="location-image">
+            <img src="@CurrentLocation.Image" alt="@CurrentLocation.Name" width="400" height="400" />
+        </div>
+        <div class="location-description">
+            <h2>@CurrentLocation.Name</h2>
+            <p>
+                @foreach (var part in SplitDescription(CurrentLocation.Description, HighlightedWords.Keys))
+                {
+                    if (HighlightedWords.ContainsKey(part))
+                    {
+                        <span class="highlighted-word" @onclick="() => ShowExplanation(part)">
+                            @part
+                        </span>
+                        if (FocusedWord == part)
+                        {
+                            <span class="explanation-box" @onclick="HideExplanation">
+                                @HighlightedWords[part]
+                            </span>
+                        }
+                    }
+                    else
+                    {
+                        @part
+                    }
+                }
+            </p>
+        </div>
+    </div>
+    <div class="location-commands">
+        @foreach (var cmd in CurrentLocation.ActionCommands)
+        {
+            <button class="command-btn">@cmd</button>
+        }
+    </div>
+    <div class="location-info-boxes">
+        <div class="info-box">
+            <h4>Materials & Items</h4>
+            <ul>
+                @foreach (var mat in CurrentLocation.VisibleMaterials)
+                {
+                    <li>@mat.Name</li>
+                }
+            </ul>
+        </div>
+        <div class="info-box">
+            <h4>Creatures</h4>
+            <ul>
+                @foreach (var creature in CurrentLocation.VisibleCreatures)
+                {
+                    <li>@creature.Name</li>
+                }
+            </ul>
+        </div>
+        <div class="info-box">
+            <h4>PCs & NPCs</h4>
+            <ul>
+                @foreach (var pc in CurrentLocation.PCs)
+                {
+                    <li>@pc.Name (PC)</li>
+                }
+                @foreach (var npc in CurrentLocation.NPCs)
+                {
+                    <li>@npc.Name (NPC)</li>
+                }
+            </ul>
+        </div>
+        <div class="info-box">
+            <h4>Buildings</h4>
+            <ul>
+                @foreach (var building in Buildings)
+                {
+                    <li>@building</li>
+                }
+            </ul>
+        </div>
+    </div>
+</div>
+
+@code {
+    // Example data for demonstration
+        
+    private Locations CurrentLocation = new Locations
+    {
+        Name = "Ancient Forest",
+        Description = "You are in a dense forest. The ancient trees and hidden ruins are notable.",
+        Image = "images/forest.jpg",
+        Biome = new Biome { Name = "Forest", Description = "A lush, green biome." },
+        VisibleMaterials = new List<Material> { new Material { Name = "Wood" }, new Material { Name = "Stone" } },
+        VisibleCreatures = new List<Creature> { new Creature { Name = "Wolf" } },
+        PCs = new List<PC> { new PC { Name = "Player1" } },
+        NPCs = new List<NPC> { new NPC { Name = "Old Hermit", Role = "Guide" } },
+        ActionCommands = new List<Command> { Command.Explore, Command.Gather, Command.Talk }
+        // Add buildings as needed
+    };
+
+    // Highlighted words and their explanations
+    private Dictionary<string, string> HighlightedWords = new()
+    {
+        { "ancient trees", "Tall, old trees that have stood for centuries." },
+        { "hidden ruins", "Remnants of a lost civilization, covered in moss." }
+    };
+
+    private string? FocusedWord = null;
+
+    // Example buildings list
+    private List<string> Buildings = new() { "Abandoned Hut", "Watchtower" };
+
+    private void ShowExplanation(string word)
+    {
+        FocusedWord = word;
+    }
+
+    private void HideExplanation()
+    {
+        FocusedWord = null;
+    }
+
+    // Helper to split description into normal and highlighted parts
+    private IEnumerable<string> SplitDescription(string description, IEnumerable<string> highlights)
+    {
+        var result = new List<string>();
+        int idx = 0;
+        foreach (var word in highlights)
+        {
+            int found = description.IndexOf(word, idx, StringComparison.OrdinalIgnoreCase);
+            if (found >= 0)
+            {
+                if (found > idx)
+                    result.Add(description.Substring(idx, found - idx));
+                result.Add(word);
+                idx = found + word.Length;
+            }
+        }
+        if (idx < description.Length)
+            result.Add(description.Substring(idx));
+        return result;
+    }
+}
