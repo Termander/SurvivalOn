@@ -1,6 +1,7 @@
 @layout EmptyLayout
 @page "/"
 @page "/login"
+@inject NavigationManager Navigation
 
 <style>
 .splash-container {
@@ -46,7 +47,7 @@
                 <InputText id="password" type="password" class="form-control" @bind-Value="loginModel.Password" />
             </div>
             <button type="submit" class="btn btn-primary w-100 mt-3">Login</button>
-            <button type="button" class="btn btn-secondary w-100 mt-2" @onclick="HandleRegister">Register</button>
+            <button type="button" class="btn btn-secondary w-100 mt-2" @onclick="NavigateToRegister">Register</button>
         </EditForm>
         @if (!string.IsNullOrEmpty(errorMessage))
         {
@@ -73,10 +74,9 @@
         }
     }
 
-    private void HandleRegister()
+    private void NavigateToRegister()
     {
-        // TODO: Navigate to registration page or show registration form
-        errorMessage = "Registration is not implemented yet.";
+        Navigation.NavigateTo("/register");
     }
 
     public class LoginModel
