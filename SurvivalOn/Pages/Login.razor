@@ -2,6 +2,8 @@
 @page "/"
 @page "/login"
 @inject NavigationManager Navigation
+@inject HttpClient Http
+@inject IConfiguration Configuration
 
 <style>
 .splash-container {
@@ -60,17 +62,43 @@
     private LoginModel loginModel = new();
     private string? errorMessage;
 
-    private void HandleLogin()
+    // Replace with your actual API base URL (e.g., "https://localhost:5001/api/players")
+    //private string apiUrl = "https://localhost:5001/api/players";
+
+    private string? apiUrl;
+
+    protected override void OnInitialized()
     {
-        // TODO: Replace with real authentication logic
-        if (loginModel.Username == "player" && loginModel.Password == "password")
+        apiUrl = Configuration["Api:BaseUrlPlayers"];
+        if (string.IsNullOrWhiteSpace(apiUrl))
         {
-            errorMessage = null;
-            // Redirect or set authentication state here
+            throw new InvalidOperationException("API URL is not configured properly in the application settings.");
         }
-        else
+    }
+
+    private async Task HandleLogin()
+    {
+        errorMessage = null;
+
+        try
         {
+            // Call the API to get player by username
+            var response = await Http.GetAsync($"{apiUrl}/{Uri.EscapeDataString(loginModel.Username)}");
+            if (response.IsSuccessStatusCode)
+            {
+                var player = await response.Content.ReadFromJsonAsync<PlayerData>();
+                if (player != null && player.Password == loginModel.Password)
+                {
+                    // Authentication successful, redirect to main layout with user ID
+                    Navigation.NavigateTo($"/home?userId={player.Id}");
+                    return;
+                }
+            }
             errorMessage = "Invalid username or password.";
+        }
+        catch
+        {
+            errorMessage = "Login failed. Please try again.";
         }
     }
 
@@ -83,5 +111,17 @@
     {
         public string Username { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
+    }
+
+    public class PlayerData
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Surname { get; set; } = string.Empty;
+        public string UserName { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public List<Guid> PCIds { get; set; } = new();
+        public DateTime RegisterDate { get; set; }
     }
 }

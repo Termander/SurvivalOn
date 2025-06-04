@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net.Http;
+using System.Net.Http.Json;
 using System.Text.Json;
+using System.Threading.Tasks;
 using SurvivalOn.Models;
 
 namespace SurvivalOn.Models
@@ -81,8 +84,10 @@ namespace SurvivalOn.Models
         }
 
         // 3. Load and decrypt player data by username
-        public static PlayerData? LoadPlayerDataByUserName(string userName)
+        public static PlayerData? LoadPlayerDataByUserName(string userName, string apiUrl)
         {
+            HttpClient http = new HttpClient();
+
             var filePath = "DynamicData/players.json";
             if (!File.Exists(filePath))
                 return null;
@@ -122,6 +127,32 @@ namespace SurvivalOn.Models
 
             // Not found
             return null;
+        }
+
+        // 3.1. Load and decrypt player data by username asynchronously
+        public static async Task<PlayerData?> LoadPlayerDataByUserNameAsync(string userName, string apiUrl)
+        {
+            using HttpClient http = new HttpClient();
+            try
+            {
+                // Compose the API endpoint URL
+                var response = await http.GetAsync($"{apiUrl.TrimEnd('/')}/{Uri.EscapeDataString(userName)}");
+                if (response.IsSuccessStatusCode)
+                {
+                    var player = await response.Content.ReadFromJsonAsync<PlayerData>();
+                    return player;
+                }
+                else
+                {
+                    // Not found or error
+                    return null;
+                }
+            }
+            catch
+            {
+                // Handle exceptions/log as needed
+                return null;
+            }
         }
 
         // 4. Save a new player with encryption to the array in players.json
@@ -237,6 +268,65 @@ namespace SurvivalOn.Models
             catch (Exception ex)
             {
                 error = $"Error saving player: {ex.Message}";
+                return false;
+            }
+        }
+
+        // 6. Save a new player asynchronously via API
+        public static async Task<bool> SaveNewPlayerAsync(PlayerData player, string apiUrl, string? error)
+        {
+            //HttpClient http, string apiUrl,
+            HttpClient http = new HttpClient();
+            //string apiUrl = Configuration["Api:BaseUrlPlayers"];
+            error = null;
+            try
+            {
+                var response = await http.PostAsJsonAsync(apiUrl, player);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    return true;
+                }
+                else
+                {
+                    error = $"API error: {response.StatusCode} - {await response.Content.ReadAsStringAsync()}";
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                error = $"HTTP error: {ex.Message}";
+                return false;
+            }
+        }
+
+        // 7. Save a new player synchronously via API
+        public static bool SaveNewPlayerViaApi(PlayerData player, string apiUrl, out string? error)
+        {
+            //HttpClient http, string apiUrl,
+            HttpClient http = new HttpClient();
+            //string apiUrl = "https://example.com/api/players"; // Replace with your actual API URL
+            //string apiUrl = Configuration["Api:BaseUrl"];
+
+            error = null;
+            try
+            {
+                // PostAsJsonAsync returns a Task<HttpResponseMessage>, so we block on .Result
+                var response = http.PostAsJsonAsync(apiUrl, player).Result;
+
+                if (response.IsSuccessStatusCode)
+                {
+                    return true;
+                }
+                else
+                {
+                    error = $"API error: {response.StatusCode} - {response.Content.ReadAsStringAsync().Result}";
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                error = $"HTTP error: {ex.Message}";
                 return false;
             }
         }

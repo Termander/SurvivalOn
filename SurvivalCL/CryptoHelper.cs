@@ -1,12 +1,15 @@
-using System;
-using System.IO;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading.Tasks;
 
-namespace SurvivalOn.Models
+namespace SurvivalCL
 {
     public static class CryptoHelper
     {
+        // Use a fixed key/IV for demo; in production, store securely!
         // Use a fixed key/IV for demo; in production, store securely!
         private static readonly byte[] Key = Encoding.UTF8.GetBytes("ACNO112yuaz990lnze770ielm128nyit"); // 32 bytes for AES-256
         private static readonly byte[] IV = Encoding.UTF8.GetBytes("AyCuNaz222324Oze"); // 16 bytes for AES

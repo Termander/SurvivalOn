@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SurvivalOn", "SurvivalOn\Su
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SurvivalOnWebApi", "SurvivalOnWebApi\SurvivalOnWebApi.csproj", "{DCAB76F7-85C0-41E7-9D07-2E9B49B05A2A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SurvivalCL", "SurvivalCL\SurvivalCL.csproj", "{9D7AE4D5-13A8-4A0A-9BE1-8461E65CE423}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{DCAB76F7-85C0-41E7-9D07-2E9B49B05A2A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DCAB76F7-85C0-41E7-9D07-2E9B49B05A2A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DCAB76F7-85C0-41E7-9D07-2E9B49B05A2A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9D7AE4D5-13A8-4A0A-9BE1-8461E65CE423}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9D7AE4D5-13A8-4A0A-9BE1-8461E65CE423}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9D7AE4D5-13A8-4A0A-9BE1-8461E65CE423}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9D7AE4D5-13A8-4A0A-9BE1-8461E65CE423}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

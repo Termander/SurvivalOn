@@ -2,6 +2,8 @@
 @page "/register"
 
 @using SurvivalOn.Models
+@inject HttpClient Http
+@inject IConfiguration Configuration
 
 <style>
 .register-container {
@@ -71,9 +73,25 @@
     private PlayerData registerModel = new();
     private string? message;
     private bool isSuccess = false;
+    private string? apiUrl;
 
-    private void HandleRegister()
+    protected override void OnInitialized()
     {
+        apiUrl = Configuration["Api:BaseUrlPlayers"];
+        if (string.IsNullOrWhiteSpace(apiUrl))
+        {
+            throw new InvalidOperationException("API URL is not configured properly in the application settings.");
+        }
+    }
+
+    private async void HandleRegister()
+    {
+        if (apiUrl == null)
+        {
+            message = "API URL is not configured. Please contact support.";
+            isSuccess = false;
+            return;
+        }
         // Check for empty fields
         if (string.IsNullOrWhiteSpace(registerModel.Name) ||
             string.IsNullOrWhiteSpace(registerModel.Surname) ||
@@ -87,7 +105,7 @@
         }
 
         // Check if username exists
-        var existing = PlayerDataGenerator.LoadPlayerDataByUserName(registerModel.UserName);
+        var existing = PlayerDataGenerator.LoadPlayerDataByUserName(registerModel.UserName, apiUrl);
         if (existing != null)
         {
             message = "Username already exists. Please choose another.";
@@ -99,21 +117,20 @@
         registerModel.Id = Guid.NewGuid();
         registerModel.PCIds = new List<Guid>();
         registerModel.RegisterDate = DateTime.UtcNow;
-        //PlayerDataGenerator.SaveNewPlayer(registerModel);
-        string? error;
-        bool success = PlayerDataGenerator.SaveNewPlayer(registerModel, out error);
+
+        string? error = null;
+        bool success = await PlayerDataGenerator.SaveNewPlayerAsync(registerModel,apiUrl,  error);
+
         if (!success)
         {
             message = error;
             isSuccess = false;
-        }else
+        }
+        else
         {
             message = "Registration successful! You can now log in.";
             isSuccess = true;
         }
-
-        //message = "Registration successful! You can now log in.";
-        //isSuccess = true;
 
         // Optionally, clear the form
         registerModel = new PlayerData();
