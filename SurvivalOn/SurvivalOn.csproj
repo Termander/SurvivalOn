@@ -16,4 +16,8 @@
     <Folder Include="StaticData\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\SurvivalCL\SurvivalCL.csproj" />
+  </ItemGroup>
+
 </Project>

@@ -1,8 +1,39 @@
-﻿ @page "/home"
-@* @page "/" *@
+﻿@page "/home"
+@using SurvivalCL
+
+@inject SurvivalOn.Services.UserSession UserSession
 
 <PageTitle>Home</PageTitle>
 
 <h1>Hello, world!</h1>
-
 Welcome to your new app.
+
+@if (showCharacterModal)
+{
+    <CharacterCreation @ref="characterCreation" OnCharacterCreated="OnCharacterCreated" />
+}
+
+@code {
+    private bool showCharacterModal = false;
+    private CharacterCreation? characterCreation;
+
+    protected override void OnInitialized()
+    {
+        // Check if CharGuid is null or empty
+        if (UserSession.CharGuid == null || UserSession.CharGuid == Guid.Empty)
+        {
+            showCharacterModal = true;
+        }
+    }
+
+    private async Task OnCharacterCreated(Character character)
+    {
+        await Task.CompletedTask;
+
+        UserSession.CharGuid = character.Id;
+        showCharacterModal = false;
+        StateHasChanged();
+    }
+}
+
+

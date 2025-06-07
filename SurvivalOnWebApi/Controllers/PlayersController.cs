@@ -37,7 +37,7 @@ namespace SurvivalOnWebApi.Controllers
             }
         }
 
-        [HttpGet("{username}")]
+        [HttpGet("GetPlayerByUsername/{username}")]
         public IActionResult GetPlayerByUsername(string username)
         {
             try

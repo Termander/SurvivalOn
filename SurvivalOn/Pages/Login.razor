@@ -4,33 +4,37 @@
 @inject NavigationManager Navigation
 @inject HttpClient Http
 @inject IConfiguration Configuration
+@inject SurvivalOn.Services.UserSession UserSession
 
 <style>
-.splash-container {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: linear-gradient(135deg, #2e3c4f 0%, #4e6e8e 100%);
-}
-.splash-box {
-    background: #fff;
-    padding: 2.5rem 2rem;
-    border-radius: 16px;
-    box-shadow: 0 4px 32px rgba(0,0,0,0.15);
-    min-width: 320px;
-    max-width: 90vw;
-}
-.splash-box h1 {
-    text-align: center;
-    margin-bottom: 1rem;
-    color: #2e3c4f;
-}
-.splash-box h3 {
-    text-align: center;
-    margin-bottom: 1.5rem;
-    color: #4e6e8e;
-}
+    .splash-container {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #2e3c4f 0%, #4e6e8e 100%);
+    }
+
+    .splash-box {
+        background: #fff;
+        padding: 2.5rem 2rem;
+        border-radius: 16px;
+        box-shadow: 0 4px 32px rgba(0,0,0,0.15);
+        min-width: 320px;
+        max-width: 90vw;
+    }
+
+        .splash-box h1 {
+            text-align: center;
+            margin-bottom: 1rem;
+            color: #2e3c4f;
+        }
+
+        .splash-box h3 {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            color: #4e6e8e;
+        }
 </style>
 
 <div class="splash-container">
@@ -40,66 +44,127 @@
         <EditForm Model="@loginModel" OnValidSubmit="HandleLogin">
             <DataAnnotationsValidator />
             <ValidationSummary />
+            <!-- Dummy fields to trick browser autofill -->
+            <input type="text" style="display:none" autocomplete="username" />
+            <input type="password" style="display:none" autocomplete="new-password" />
             <div class="form-group">
                 <label for="username">Username</label>
-                <InputText id="username" class="form-control" @bind-Value="loginModel.Username" />
+                <InputText id="username" class="form-control" @bind-Value="loginModel.Username" autocomplete="off" />
             </div>
             <div class="form-group">
                 <label for="password">Password</label>
-                <InputText id="password" type="password" class="form-control" @bind-Value="loginModel.Password" />
+                <InputText id="password" type="password" class="form-control" @bind-Value="loginModel.Password" autocomplete="off" />
             </div>
             <button type="submit" class="btn btn-primary w-100 mt-3">Login</button>
             <button type="button" class="btn btn-secondary w-100 mt-2" @onclick="NavigateToRegister">Register</button>
         </EditForm>
-        @if (!string.IsNullOrEmpty(errorMessage))
-        {
-            <div class="alert alert-danger mt-3">@errorMessage</div>
-        }
     </div>
 </div>
 
+@if (showModal)
+{
+    <div class="modal-backdrop fade show"></div>
+    <div class="modal d-block" tabindex="-1" style="background:rgba(0,0,0,0.3)">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@modalTitle</h5>
+                </div>
+                <div class="modal-body">
+                    <p>@modalMessage</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary" @onclick="OnModalOk">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
 @code {
     private LoginModel loginModel = new();
-    private string? errorMessage;
-
-    // Replace with your actual API base URL (e.g., "https://localhost:5001/api/players")
-    //private string apiUrl = "https://localhost:5001/api/players";
-
     private string? apiUrl;
+    private bool showModal = false;
+    private string modalTitle = "Message";
+    private string? modalMessage;
 
-    protected override void OnInitialized()
+
+    protected override async Task OnInitializedAsync()
     {
         apiUrl = Configuration["Api:BaseUrlPlayers"];
         if (string.IsNullOrWhiteSpace(apiUrl))
         {
-            throw new InvalidOperationException("API URL is not configured properly in the application settings.");
+            ShowModal("Error", "API URL is not configured properly in the application settings.");
         }
+#if DEBUG
+    // Auto-login in debug mode
+    loginModel.Username = "Zadeh";
+    loginModel.Password = "termander";
+    await HandleLogin();
+#endif
     }
 
     private async Task HandleLogin()
     {
-        errorMessage = null;
 
         try
         {
-            // Call the API to get player by username
-            var response = await Http.GetAsync($"{apiUrl}/{Uri.EscapeDataString(loginModel.Username)}");
+            var hashedPassword = Convert.ToBase64String(
+                System.Security.Cryptography.SHA256.HashData(
+                    System.Text.Encoding.UTF8.GetBytes(loginModel.Password)
+                )
+            );
+
+            var url = $"{apiUrl}/authenticate?username={Uri.EscapeDataString(loginModel.Username)}&password={Uri.EscapeDataString(hashedPassword)}";
+            var response = await Http.GetAsync(url);
             if (response.IsSuccessStatusCode)
             {
                 var player = await response.Content.ReadFromJsonAsync<PlayerData>();
-                if (player != null && player.Password == loginModel.Password)
+                if (player != null)
                 {
-                    // Authentication successful, redirect to main layout with user ID
-                    Navigation.NavigateTo($"/home?userId={player.Id}");
+                    UserSession.Username = loginModel.Username;
+                    UserSession.HashedPassword = hashedPassword;
+                    if (player.PCIds != null && player.PCIds.Count > 0)
+                    {
+                        UserSession.CharGuid = player.PCIds[0];
+                    }
+                    else
+                    {
+                        UserSession.CharGuid = null;
+                    }
+                        Navigation.NavigateTo($"/home?userId={player.Id}");
                     return;
                 }
             }
-            errorMessage = "Invalid username or password.";
+            else if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                ShowModal("Login Failed", "Invalid password.");
+            }
+            else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                ShowModal("Login Failed", "Player not found.");
+            }
+            else
+            {
+                ShowModal("Login Failed", $"Login failed: {await response.Content.ReadAsStringAsync()}");
+            }
         }
         catch
         {
-            errorMessage = "Login failed. Please try again.";
+            ShowModal("Error", "Login failed. Please try again.");
         }
+    }
+
+    private void ShowModal(string title, string? message)
+    {
+        modalTitle = title;
+        modalMessage = message;
+        showModal = true;
+    }
+
+    private void OnModalOk()
+    {
+        showModal = false;
     }
 
     private void NavigateToRegister()

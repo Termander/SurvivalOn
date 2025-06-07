@@ -4,42 +4,74 @@
 @using SurvivalOn.Models
 @inject HttpClient Http
 @inject IConfiguration Configuration
+@inject NavigationManager Navigation
 
 <style>
-.register-container {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: linear-gradient(135deg, #2e3c4f 0%, #4e6e8e 100%);
-}
-.register-box {
-    background: #fff;
-    padding: 2.5rem 2rem;
-    border-radius: 16px;
-    box-shadow: 0 4px 32px rgba(0,0,0,0.15);
-    min-width: 340px;
-    max-width: 90vw;
-}
-.register-box h1 {
-    text-align: center;
-    margin-bottom: 1rem;
-    color: #2e3c4f;
-}
-.register-box h3 {
-    text-align: center;
-    margin-bottom: 1.5rem;
-    color: #4e6e8e;
-}
+    .register-container {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #2e3c4f 0%, #4e6e8e 100%);
+    }
+
+    .register-box {
+        background: #fff;
+        padding: 2.5rem 2rem;
+        border-radius: 16px;
+        box-shadow: 0 4px 32px rgba(0,0,0,0.15);
+        min-width: 340px;
+        max-width: 90vw;
+    }
+
+        .register-box h1 {
+            text-align: center;
+            margin-bottom: 1rem;
+            color: #2e3c4f;
+        }
+
+        .register-box h3 {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            color: #4e6e8e;
+        }
+
+    .clear-btn {
+        position: absolute;
+        top: 1.5rem;
+        right: 2rem;
+        background: transparent;
+        border: none;
+        font-size: 1.5rem;
+        color: #888;
+        cursor: pointer;
+        transition: color 0.2s;
+    }
+
+        .clear-btn:hover {
+            color: #d9534f;
+        }
+
+    .register-box {
+        position: relative;
+    }
 </style>
 
 <div class="register-container">
     <div class="register-box">
+        <button class="clear-btn" title="Clear form" @onclick="ClearForm" aria-label="Clear form">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M2.146 2.146a.5.5 0 0 1 .708 0L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8 2.146 2.854a.5.5 0 0 1 0-.708z" />
+            </svg>
+        </button>
         <h1>SurvivalOn</h1>
         <h3>Register</h3>
-        <EditForm Model="@registerModel" OnValidSubmit="HandleRegister">
+        <EditForm Model="@registerModel" OnValidSubmit="HandleRegister" aut>
             <DataAnnotationsValidator />
             <ValidationSummary />
+            <!-- Dummy fields to trick browser autofill -->
+            <input type="text" style="display:none" autocomplete="username" />
+            <input type="password" style="display:none" autocomplete="new-password" />
             <div class="form-group">
                 <label for="name">Name</label>
                 <InputText id="name" class="form-control" @bind-Value="registerModel.Name" />
@@ -62,34 +94,52 @@
             </div>
             <button type="submit" class="btn btn-primary w-100 mt-3">Register</button>
         </EditForm>
-        @if (!string.IsNullOrEmpty(message))
-        {
-            <div class="alert @(isSuccess ? "alert-success" : "alert-danger") mt-3">@message</div>
-        }
+        <button class="btn btn-link w-100 mt-2" @onclick="GoToLogin">Return to Login</button>
     </div>
 </div>
+
+@if (showModal)
+{
+    <div class="modal-backdrop fade show"></div>
+    <div class="modal d-block" tabindex="-1" style="background:rgba(0,0,0,0.3)">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@modalTitle</h5>
+                </div>
+                <div class="modal-body">
+                    <p>@message</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary" @onclick="OnModalOk">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
 
 @code {
     private PlayerData registerModel = new();
     private string? message;
-    private bool isSuccess = false;
     private string? apiUrl;
+    private bool showModal = false;
+    private string modalTitle = "Message";
+    private bool shouldRedirectToLogin = false;
 
     protected override void OnInitialized()
     {
         apiUrl = Configuration["Api:BaseUrlPlayers"];
         if (string.IsNullOrWhiteSpace(apiUrl))
         {
-            throw new InvalidOperationException("API URL is not configured properly in the application settings.");
+            ShowModal("Error", "API URL is not configured properly in the application settings.");
         }
     }
 
-    private async void HandleRegister()
+    private async Task HandleRegister()
     {
         if (apiUrl == null)
         {
-            message = "API URL is not configured. Please contact support.";
-            isSuccess = false;
+            ShowModal("Error", "API URL is not configured. Please contact support.");
             return;
         }
         // Check for empty fields
@@ -99,17 +149,22 @@
             string.IsNullOrWhiteSpace(registerModel.Password) ||
             string.IsNullOrWhiteSpace(registerModel.Email))
         {
-            message = "All fields are required.";
-            isSuccess = false;
+            ShowModal("Validation Error", "All fields are required.");
             return;
         }
 
         // Check if username exists
-        var existing = PlayerDataGenerator.LoadPlayerDataByUserName(registerModel.UserName, apiUrl);
+        var (existing, loadError) = await PlayerDataGenerator.LoadPlayerDataByUserNameAsync(registerModel.UserName, apiUrl);
+
+        // Only treat as error if loadError is not null and not a NotFound (404)
+        if (loadError != null && !loadError.Contains("NotFound"))
+        {
+            ShowModal("Error", loadError);
+            return;
+        }
         if (existing != null)
         {
-            message = "Username already exists. Please choose another.";
-            isSuccess = false;
+            ShowModal("Validation Error", "Username already exists. Please choose another.");
             return;
         }
 
@@ -118,21 +173,55 @@
         registerModel.PCIds = new List<Guid>();
         registerModel.RegisterDate = DateTime.UtcNow;
 
-        string? error = null;
-        bool success = await PlayerDataGenerator.SaveNewPlayerAsync(registerModel,apiUrl,  error);
+        // Hash the password before sending
+        registerModel.Password = Convert.ToBase64String(
+            System.Security.Cryptography.SHA256.HashData(
+                System.Text.Encoding.UTF8.GetBytes(registerModel.Password)
+            )
+        );
+
+        var (success, saveError) = await PlayerDataGenerator.SaveNewPlayerAsync(registerModel, apiUrl);
 
         if (!success)
         {
-            message = error;
-            isSuccess = false;
+            ShowModal("Error", saveError);
         }
         else
         {
-            message = "Registration successful! You can now log in.";
-            isSuccess = true;
+            ShowModal("Success", "Registration successful! You can now log in.", true);
         }
 
         // Optionally, clear the form
         registerModel = new PlayerData();
+        StateHasChanged();
+    }
+
+    private void ShowModal(string title, string? msg, bool redirectToLogin = false)
+    {
+        modalTitle = title;
+        message = msg;
+        showModal = true;
+        shouldRedirectToLogin = redirectToLogin;
+    }
+
+    private void OnModalOk()
+    {
+        showModal = false;
+        if (shouldRedirectToLogin)
+        {
+            shouldRedirectToLogin = false;
+            Navigation.NavigateTo("/login");
+        }
+    }
+
+    private void GoToLogin()
+    {
+        Navigation.NavigateTo("/login");
+    }
+
+    private void ClearForm()
+    {
+        registerModel = new PlayerData();
+        StateHasChanged();
     }
 }
