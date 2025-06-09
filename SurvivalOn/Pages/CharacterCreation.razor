@@ -218,7 +218,7 @@
                             <div class="mb-2 mt-2 px-2 py-1 rounded" style="background:linear-gradient(90deg,#1e293b 60%,#2563eb 100%);color:#fff;font-weight:bold;font-size:1.2rem;letter-spacing:1px;box-shadow:0 2px 8px #0001;">
                                 <span style="text-shadow:1px 1px 2px #0006;">&#9876; Combat Proficiencies (@GetUnselectedCount("combat"))</span>
                             </div>
-                            <div style="max-height: 220px; overflow-y: auto;">
+                            <div style="max-height: 132px; overflow-y: auto;">
                                 @foreach (var prof in combatProficiencies)
                                 {
                                     <div class="d-flex align-items-center mb-2 px-2 py-1 rounded" style="background:#f1f5f9;">
@@ -238,7 +238,7 @@
                             <div class="mb-2 mt-4 px-2 py-1 rounded" style="background:linear-gradient(90deg,#065f46 60%,#22d3ee 100%);color:#fff;font-weight:bold;font-size:1.2rem;letter-spacing:1px;box-shadow:0 2px 8px #0001;">
                                 <span style="text-shadow:1px 1px 2px #0006;">&#128295; Build Proficiencies (@GetUnselectedCount("build"))</span>
                             </div>
-                            <div style="max-height: 220px; overflow-y: auto;">
+                            <div style="max-height: 132px; overflow-y: auto;">
                                 @foreach (var prof in buildProficiencies)
                                 {
                                     <div class="d-flex align-items-center mb-2 px-2 py-1 rounded" style="background:#f1f5f9;">
@@ -258,7 +258,7 @@
                             <div class="mb-2 mt-4 px-2 py-1 rounded" style="background:linear-gradient(90deg,#a16207 60%,#fde68a 100%);color:#1e293b;font-weight:bold;font-size:1.2rem;letter-spacing:1px;box-shadow:0 2px 8px #0001;">
                                 <span style="text-shadow:1px 1px 2px #fff8;">&#127793; General Proficiencies (@GetUnselectedCount("general"))</span>
                             </div>
-                            <div style="max-height: 220px; overflow-y: auto;">
+                            <div style="max-height: 132px; overflow-y: auto;">
                                 @foreach (var prof in generalProficiencies)
                                 {
                                     <div class="d-flex align-items-center mb-2 px-2 py-1 rounded" style="background:#f1f5f9;">
@@ -286,9 +286,9 @@
     @if (showPopup)
     {
         <div class="modal show d-block" tabindex="-1" style="background:rgba(0,0,0,0.3);">
-            <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-dialog" style="position:absolute;top:150px;left:0;right:0;margin-left:auto;margin-right:auto;width:40vw;max-width:600px;min-width:350px;">
                 <div class="modal-content">
-                    <div class="modal-header" style="@GetPopupHeaderStyle()">
+                    <div class="modal-header" style="@GetPopupHeaderStyle();border-bottom:none;">
                         <span style="font-size:2rem; margin-right:0.5rem;">@((MarkupString)GetPopupIcon())</span>
                         <h5 class="modal-title mb-0">@popupProficiency</h5>
                         <button type="button" class="btn-close" @onclick="ClosePopup"></button>
@@ -305,8 +305,6 @@
     }
 }
 @code {
-    // ... existing code ...
-
 
     private const int CombatLimit = 1;
     private const int BuildLimit = 2;

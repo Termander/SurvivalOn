@@ -13,7 +13,6 @@
 
   <ItemGroup>
     <Folder Include="DynamicData\" />
-    <Folder Include="StaticData\" />
   </ItemGroup>
 
   <ItemGroup>
