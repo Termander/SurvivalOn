@@ -48,19 +48,6 @@ namespace SurvivalCL
             return File.ReadAllBytes(ImagePath);
         }
 
-        public static List<Proficiency> GetAllBasicProficiencies(IEnumerable<Proficiency> proficiencies)
-        {
-            var result = new List<Proficiency>();
-            foreach (var proficiency in proficiencies)
-            {
-                if (proficiency.IsBasic)
-                {
-                    result.Add(proficiency);
-                }
-            }
-            return result;
-        }
-
         public static List<Proficiency> GetAllBasicProficiencies(string jsonPath)
         {
             if (!File.Exists(jsonPath))

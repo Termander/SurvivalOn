@@ -1,4 +1,6 @@
 ﻿@using SurvivalCL
+@inject HttpClient Http
+@inject IConfiguration Configuration
 
 @code {
     [Parameter] public EventCallback<Character> OnCharacterCreated { get; set; }
@@ -9,12 +11,20 @@
     private int bonusPoints;
     private int minStat = 16;
     private int maxStat = 24;
+    private string? apiUrl;
 
     // Tab state
     private int activeTab = 0;
 
+    private List<Proficiency> allBasicProficiencies = new();
+    private bool isLoadingProficiencies = true;
+
+    private List<Proficiency> combatProficiencies = new();
+    private List<Proficiency> buildProficiencies = new();
+    private List<Proficiency> generalProficiencies = new();
+
     // Proficiency groups and descriptions (replace with your actual data if needed)
-    private Dictionary<string, string> combatProficiencies = new()
+    /*private Dictionary<string, string> combatProficiencies = new()
     {
         { "Swordsmanship", "Skill with swords and melee weapons." },
         { "Archery", "Skill with bows and ranged weapons." },
@@ -47,7 +57,7 @@
         { "Stealth", "Moving quietly and avoiding detection." },
         { "Alchemy", "Creating potions and elixirs." },
         { "Cooking", "Preparing food and meals." }
-    };
+    };*/
 
     private HashSet<string> selectedProficiencies = new();
     private string? popupProficiency;
@@ -65,9 +75,33 @@
     private string buildHeader = "build";
     private string generalHeader = "general";
 
-    protected override void OnInitialized()
+    /* protected override void OnInitialized()
+     {
+         RollStats();
+     }*/
+    protected override async Task OnInitializedAsync()
     {
+        apiUrl = Configuration["Api:BaseUrlProficiency"];
         RollStats();
+        await LoadBasicProficiencies();
+    }
+
+    private async Task LoadBasicProficiencies()
+    {
+        try
+        {
+            var result = await Http.GetFromJsonAsync<List<Proficiency>>(apiUrl);
+            allBasicProficiencies = result ?? new List<Proficiency>();
+
+            // Group by ProficiencyType
+            combatProficiencies = allBasicProficiencies.Where(p => p.Type == ProficiencyType.Combat).ToList();
+            buildProficiencies = allBasicProficiencies.Where(p => p.Type == ProficiencyType.Build).ToList();
+            generalProficiencies = allBasicProficiencies.Where(p => p.Type == ProficiencyType.General).ToList();
+        }
+        finally
+        {
+            isLoadingProficiencies = false;
+        }
     }
 
     private void RollStats()
@@ -214,67 +248,74 @@
                     }
                     else if (activeTab == 1)
                     {
-                        <div>
-                            <div class="mb-2 mt-2 px-2 py-1 rounded" style="background:linear-gradient(90deg,#1e293b 60%,#2563eb 100%);color:#fff;font-weight:bold;font-size:1.2rem;letter-spacing:1px;box-shadow:0 2px 8px #0001;">
-                                <span style="text-shadow:1px 1px 2px #0006;">&#9876; Combat Proficiencies (@GetUnselectedCount("combat"))</span>
-                            </div>
-                            <div style="max-height: 132px; overflow-y: auto;">
-                                @foreach (var prof in combatProficiencies)
-                                {
-                                    <div class="d-flex align-items-center mb-2 px-2 py-1 rounded" style="background:#f1f5f9;">
-                                        <input class="form-check-input me-2" type="checkbox"
-                                               checked="@selectedProficiencies.Contains(prof.Key)"
-                                               disabled="@IsCheckboxDisabled(prof.Key)"
-                                               @onchange="() => ToggleProficiency(prof.Key)" />
-                                        <button type="button" class="btn btn-link p-0 me-2" title="Info"
-                                                @onclick="() => ShowProficiencyInfo(prof.Key, prof.Value, combatHeader)">
-                                            <span style="font-size:1.2em;">&#9432;</span>
-                                        </button>
-                                        <label class="form-check-label mb-0">@prof.Key</label>
-                                    </div>
-                                }
-                            </div>
+                        @if (isLoadingProficiencies)
+                        {
+                            <div>Loading proficiencies...</div>
+                        }
+                        else
+                        {
+                            <div>
+                                <div class="mb-2 mt-2 px-2 py-1 rounded" style="background:linear-gradient(90deg,#1e293b 60%,#2563eb 100%);color:#fff;font-weight:bold;font-size:1.2rem;letter-spacing:1px;box-shadow:0 2px 8px #0001;">
+                                    <span style="text-shadow:1px 1px 2px #0006;">&#9876; Combat Proficiencies (@GetUnselectedCount("combat"))</span>
+                                </div>
+                                <div style="max-height: 132px; overflow-y: auto;">
+                                    @foreach (var prof in combatProficiencies)
+                                    {
+                                        <div class="d-flex align-items-center mb-2 px-2 py-1 rounded" style="background:#f1f5f9;">
+                                            <input class="form-check-input me-2" type="checkbox"
+                                                   checked="@selectedProficiencies.Contains(prof.Name)"
+                                                   disabled="@IsCheckboxDisabled(prof.Name)"
+                                                   @onchange="() => ToggleProficiency(prof.Name)" />
+                                            <button type="button" class="btn btn-link p-0 me-2" title="Info"
+                                                    @onclick="() => ShowProficiencyInfo(prof.Name, prof.Description, combatHeader)">
+                                                <span style="font-size:1.2em;">&#9432;</span>
+                                            </button>
+                                            <label class="form-check-label mb-0">@prof.Name</label>
+                                        </div>
+                                    }
+                                </div>
 
-                            <div class="mb-2 mt-4 px-2 py-1 rounded" style="background:linear-gradient(90deg,#065f46 60%,#22d3ee 100%);color:#fff;font-weight:bold;font-size:1.2rem;letter-spacing:1px;box-shadow:0 2px 8px #0001;">
-                                <span style="text-shadow:1px 1px 2px #0006;">&#128295; Build Proficiencies (@GetUnselectedCount("build"))</span>
-                            </div>
-                            <div style="max-height: 132px; overflow-y: auto;">
-                                @foreach (var prof in buildProficiencies)
-                                {
-                                    <div class="d-flex align-items-center mb-2 px-2 py-1 rounded" style="background:#f1f5f9;">
-                                        <input class="form-check-input me-2" type="checkbox"
-                                               checked="@selectedProficiencies.Contains(prof.Key)"
-                                               disabled="@IsCheckboxDisabled(prof.Key)"
-                                               @onchange="() => ToggleProficiency(prof.Key)" />
-                                        <button type="button" class="btn btn-link p-0 me-2" title="Info"
-                                                @onclick="() => ShowProficiencyInfo(prof.Key, prof.Value, buildHeader)">
-                                            <span style="font-size:1.2em;">&#9432;</span>
-                                        </button>
-                                        <label class="form-check-label mb-0">@prof.Key</label>
-                                    </div>
-                                }
-                            </div>
+                                <div class="mb-2 mt-4 px-2 py-1 rounded" style="background:linear-gradient(90deg,#065f46 60%,#22d3ee 100%);color:#fff;font-weight:bold;font-size:1.2rem;letter-spacing:1px;box-shadow:0 2px 8px #0001;">
+                                    <span style="text-shadow:1px 1px 2px #0006;">&#128295; Build Proficiencies (@GetUnselectedCount("build"))</span>
+                                </div>
+                                <div style="max-height: 132px; overflow-y: auto;">
+                                    @foreach (var prof in buildProficiencies)
+                                    {
+                                        <div class="d-flex align-items-center mb-2 px-2 py-1 rounded" style="background:#f1f5f9;">
+                                            <input class="form-check-input me-2" type="checkbox"
+                                                   checked="@selectedProficiencies.Contains(prof.Name)"
+                                                   disabled="@IsCheckboxDisabled(prof.Name)"
+                                                   @onchange="() => ToggleProficiency(prof.Name)" />
+                                            <button type="button" class="btn btn-link p-0 me-2" title="Info"
+                                                    @onclick="() => ShowProficiencyInfo(prof.Name, prof.Description, buildHeader)">
+                                                <span style="font-size:1.2em;">&#9432;</span>
+                                            </button>
+                                            <label class="form-check-label mb-0">@prof.Name</label>
+                                        </div>
+                                    }
+                                </div>
 
-                            <div class="mb-2 mt-4 px-2 py-1 rounded" style="background:linear-gradient(90deg,#a16207 60%,#fde68a 100%);color:#1e293b;font-weight:bold;font-size:1.2rem;letter-spacing:1px;box-shadow:0 2px 8px #0001;">
-                                <span style="text-shadow:1px 1px 2px #fff8;">&#127793; General Proficiencies (@GetUnselectedCount("general"))</span>
+                                <div class="mb-2 mt-4 px-2 py-1 rounded" style="background:linear-gradient(90deg,#a16207 60%,#fde68a 100%);color:#1e293b;font-weight:bold;font-size:1.2rem;letter-spacing:1px;box-shadow:0 2px 8px #0001;">
+                                    <span style="text-shadow:1px 1px 2px #fff8;">&#127793; General Proficiencies (@GetUnselectedCount("general"))</span>
+                                </div>
+                                <div style="max-height: 132px; overflow-y: auto;">
+                                    @foreach (var prof in generalProficiencies)
+                                    {
+                                        <div class="d-flex align-items-center mb-2 px-2 py-1 rounded" style="background:#f1f5f9;">
+                                            <input class="form-check-input me-2" type="checkbox"
+                                                   checked="@selectedProficiencies.Contains(prof.Name)"
+                                                   disabled="@IsCheckboxDisabled(prof.Name)"
+                                                   @onchange="() => ToggleProficiency(prof.Name)" />
+                                            <button type="button" class="btn btn-link p-0 me-2" title="Info"
+                                                    @onclick="() => ShowProficiencyInfo(prof.Name, prof.Description, generalHeader)">
+                                                <span style="font-size:1.2em;">&#9432;</span>
+                                            </button>
+                                            <label class="form-check-label mb-0">@prof.Name</label>
+                                        </div>
+                                    }
+                                </div>
                             </div>
-                            <div style="max-height: 132px; overflow-y: auto;">
-                                @foreach (var prof in generalProficiencies)
-                                {
-                                    <div class="d-flex align-items-center mb-2 px-2 py-1 rounded" style="background:#f1f5f9;">
-                                        <input class="form-check-input me-2" type="checkbox"
-                                               checked="@selectedProficiencies.Contains(prof.Key)"
-                                               disabled="@IsCheckboxDisabled(prof.Key)"
-                                               @onchange="() => ToggleProficiency(prof.Key)" />
-                                        <button type="button" class="btn btn-link p-0 me-2" title="Info"
-                                                @onclick="() => ShowProficiencyInfo(prof.Key, prof.Value, generalHeader)">
-                                            <span style="font-size:1.2em;">&#9432;</span>
-                                        </button>
-                                        <label class="form-check-label mb-0">@prof.Key</label>
-                                    </div>
-                                }
-                            </div>
-                        </div>
+                        }
                     }
                 </div>
                 <div class="modal-footer" style="border-bottom-left-radius:1rem;border-bottom-right-radius:1rem;">
@@ -318,9 +359,9 @@
 
         int selectedCount = group switch
         {
-            "combat" => selectedProficiencies.Count(p => combatProficiencies.ContainsKey(p)),
-            "build" => selectedProficiencies.Count(p => buildProficiencies.ContainsKey(p)),
-            "general" => selectedProficiencies.Count(p => generalProficiencies.ContainsKey(p)),
+            "combat" => selectedProficiencies.Count(p => combatProficiencies.Any(cp => cp.Name == p)),
+            "build" => selectedProficiencies.Count(p => buildProficiencies.Any(bp => bp.Name == p)),
+            "general" => selectedProficiencies.Count(p => generalProficiencies.Any(gp => gp.Name == p)),
             _ => 0
         };
 
@@ -346,9 +387,9 @@
 
     private string GetProficiencyGroup(string name)
     {
-        if (combatProficiencies.ContainsKey(name)) return "combat";
-        if (buildProficiencies.ContainsKey(name)) return "build";
-        if (generalProficiencies.ContainsKey(name)) return "general";
+        if (combatProficiencies.Any(p => p.Name == name)) return "combat";
+        if (buildProficiencies.Any(p => p.Name == name)) return "build";
+        if (generalProficiencies.Any(p => p.Name == name)) return "general";
         return "";
     }
 
@@ -363,9 +404,9 @@
         };
         int selected = group switch
         {
-            "combat" => selectedProficiencies.Count(p => combatProficiencies.ContainsKey(p)),
-            "build" => selectedProficiencies.Count(p => buildProficiencies.ContainsKey(p)),
-            "general" => selectedProficiencies.Count(p => generalProficiencies.ContainsKey(p)),
+            "combat" => selectedProficiencies.Count(p => combatProficiencies.Any(cp => cp.Name == p)),
+            "build" => selectedProficiencies.Count(p => buildProficiencies.Any(bp => bp.Name == p)),
+            "general" => selectedProficiencies.Count(p => generalProficiencies.Any(gp => gp.Name == p)),
             _ => 0
         };
         return Math.Max(0, limit - selected);
@@ -383,9 +424,9 @@
         };
         int selected = group switch
         {
-            "combat" => selectedProficiencies.Count(p => combatProficiencies.ContainsKey(p)),
-            "build" => selectedProficiencies.Count(p => buildProficiencies.ContainsKey(p)),
-            "general" => selectedProficiencies.Count(p => generalProficiencies.ContainsKey(p)),
+            "combat" => selectedProficiencies.Count(p => combatProficiencies.Any(cp => cp.Name == p)),
+            "build" => selectedProficiencies.Count(p => buildProficiencies.Any(bp => bp.Name == p)),
+            "general" => selectedProficiencies.Count(p => generalProficiencies.Any(gp => gp.Name == p)),
             _ => 0
         };
         return !selectedProficiencies.Contains(name) && selected >= limit;
