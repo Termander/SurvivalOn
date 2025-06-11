@@ -14,8 +14,13 @@ namespace SurvivalOn.Models
         public static string Encrypt(string plainText)
         {
             using var aes = Aes.Create();
+            if (aes == null)
+                throw new PlatformNotSupportedException("AES encryption is not supported on this platform.");
+            
             aes.Key = Key;
             aes.IV = IV;
+            aes.Mode = CipherMode.CBC; // Explicitly set the mode
+            aes.Padding = PaddingMode.PKCS7; // Explicitly set the padding
             using var encryptor = aes.CreateEncryptor(aes.Key, aes.IV);
             using var ms = new MemoryStream();
             using (var cs = new CryptoStream(ms, encryptor, CryptoStreamMode.Write))
@@ -28,8 +33,13 @@ namespace SurvivalOn.Models
         {
             var buffer = Convert.FromBase64String(cipherText);
             using var aes = Aes.Create();
+            if (aes == null)
+                throw new PlatformNotSupportedException("AES decryption is not supported on this platform.");
+            
             aes.Key = Key;
             aes.IV = IV;
+            aes.Mode = CipherMode.CBC; // Explicitly set the mode
+            aes.Padding = PaddingMode.PKCS7; // Explicitly set the padding
             using var decryptor = aes.CreateDecryptor(aes.Key, aes.IV);
             using var ms = new MemoryStream(buffer);
             using var cs = new CryptoStream(ms, decryptor, CryptoStreamMode.Read);

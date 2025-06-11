@@ -12,10 +12,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="DynamicData\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <None Include="wwwroot\Images\Locations\forest_A_00001.png" />
     <None Include="wwwroot\Images\Locations\forest_A_00002.png" />
     <None Include="wwwroot\Images\Locations\forest_P_00001.png" />

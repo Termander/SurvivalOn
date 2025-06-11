@@ -255,18 +255,6 @@
     "BonusDescription": "Improves complex construction."
   },
   {
-    "UniqueId": "f3a7b8c9-d0e1-2f3a-4b5c-6d7e8f9a0b1c",
-    "Name": "Fishing",
-    "Description": "Catching fish for food.",
-    "Type": "Build",
-    "IsBasic": true,
-    "AbilityPrerequisites": { "Dexterity": 8, "Wisdom": 8 },
-    "PrerequisiteProficiencies": {},
-    "BonusAbilities": {},
-    "ImagePath": "",
-    "BonusDescription": "Improves fishing success."
-  },
-  {
     "UniqueId": "a4b8c9d0-e1f2-3a4b-5c6d-7e8f9a0b1c2d",
     "Name": "Mining",
     "Description": "Extracting minerals and ores from the earth.",
@@ -337,29 +325,5 @@
     "BonusAbilities": { "Dexterity": 1 },
     "ImagePath": "",
     "BonusDescription": "Improves ability to move unseen."
-  },
-  {
-    "UniqueId": "a0b4c5d6-e7f8-9a0b-1c2d-3e4f5a6b7c8d",
-    "Name": "Alchemy",
-    "Description": "Creating potions and elixirs.",
-    "Type": "General",
-    "IsBasic": false,
-    "AbilityPrerequisites": { "Intelligence": 12 },
-    "PrerequisiteProficiencies": {},
-    "BonusAbilities": { "Intelligence": 1 },
-    "ImagePath": "",
-    "BonusDescription": "Allows potion creation."
-  },
-  {
-    "UniqueId": "b1c5d6e7-f8a9-0b1c-2d3e-4f5a6b7c8d9e",
-    "Name": "Cooking",
-    "Description": "Preparing food and meals.",
-    "Type": "General",
-    "IsBasic": true,
-    "AbilityPrerequisites": { "Wisdom": 8 },
-    "PrerequisiteProficiencies": {},
-    "BonusAbilities": { "Constitution": 1 },
-    "ImagePath": "",
-    "BonusDescription": "Improves food quality."
   }
 ]

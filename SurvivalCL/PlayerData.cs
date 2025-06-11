@@ -132,6 +132,75 @@ namespace SurvivalCL
             }
         }
 
+        public static bool UpdatePlayerDataByUserName(PlayerData updatedPlayer, out string? error)
+        {
+            error = null;
+            try
+            {
+                var filePath = "DynamicData/players.json";
+                if (!File.Exists(filePath))
+                {
+                    error = "Player data file not found.";
+                    return false;
+                }
+
+                var fileContent = File.ReadAllText(filePath);
+                var encryptedPlayers = JsonSerializer.Deserialize<List<EncryptedPlayerFile>>(fileContent) ?? new List<EncryptedPlayerFile>();
+                bool found = false;
+
+                for (int i = 0; i < encryptedPlayers.Count; i++)
+                {
+                    var decryptedSecondJson = CryptoHelper.Decrypt(encryptedPlayers[i].EncryptedData);
+                    var secondJsonObj = JsonSerializer.Deserialize<Dictionary<string, string>>(decryptedSecondJson);
+
+                    if (secondJsonObj == null)
+                        continue;
+
+                    var decryptedUserName = CryptoHelper.Decrypt(secondJsonObj["UserName"]);
+                    if (string.Equals(decryptedUserName, updatedPlayer.UserName, StringComparison.OrdinalIgnoreCase))
+                    {
+                        // Update the player data
+                        var updatedSecondJsonObj = new Dictionary<string, string>
+                        {
+                            ["Name"] = CryptoHelper.Encrypt(updatedPlayer.Name),
+                            ["Surname"] = CryptoHelper.Encrypt(updatedPlayer.Surname),
+                            ["UserName"] = CryptoHelper.Encrypt(updatedPlayer.UserName),
+                            ["Password"] = CryptoHelper.Encrypt(updatedPlayer.Password),
+                            ["Email"] = CryptoHelper.Encrypt(updatedPlayer.Email),
+                            ["PCIds"] = CryptoHelper.Encrypt(JsonSerializer.Serialize(updatedPlayer.PCIds)),
+                            ["RegisterDate"] = CryptoHelper.Encrypt(updatedPlayer.RegisterDate.ToString("o"))
+                        };
+                        string updatedSecondJson = JsonSerializer.Serialize(updatedSecondJsonObj);
+
+                        encryptedPlayers[i] = new EncryptedPlayerFile
+                        {
+                            Id = updatedPlayer.Id,
+                            EncryptedData = CryptoHelper.Encrypt(updatedSecondJson)
+                        };
+                        found = true;
+                        break;
+                    }
+                }
+
+                if (!found)
+                {
+                    error = "Player not found.";
+                    return false;
+                }
+
+                Directory.CreateDirectory("DynamicData");
+                var updatedJson = JsonSerializer.Serialize(encryptedPlayers, new JsonSerializerOptions { WriteIndented = true });
+                File.WriteAllText(filePath, updatedJson);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                error = $"Error updating player: {ex.Message}";
+                return false;
+            }
+        }
+
         private class EncryptedPlayerFile
         {
             public Guid Id { get; set; }

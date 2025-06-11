@@ -33,16 +33,16 @@ namespace SurvivalOnWebApi.Controllers
             return Ok(character);
         }
 
-        [HttpPost]
-        public ActionResult<Character> Create(Character character)
-        {
-            character.Id = Guid.NewGuid();
-            Characters.Add(character);
-            return CreatedAtAction(nameof(GetById), new { id = character.Id }, character);
-        }
+        //[HttpPost]
+        //public ActionResult<Character> Create(Character character)
+        //{
+        //    character.Id = Guid.NewGuid();
+        //    Characters.Add(character);
+        //    return CreatedAtAction(nameof(GetById), new { id = character.Id }, character);
+        //}
 
         [HttpPost("create")]
-        public IActionResult CreateCharacter([FromBody] CreateCharacterRequest request)
+        public IActionResult Create([FromBody] CreateCharacterRequest request)
         {
             // 1. Load player data by username and hashed password
             var player = PlayerData.LoadPlayerDataByUserName(request.UserName);
@@ -50,8 +50,8 @@ namespace SurvivalOnWebApi.Controllers
                 return NotFound("Player not found.");
 
             // Hash the provided password and compare
-            var hashedInput = HashPassword(request.Password);
-            if (!string.Equals(player.Password, hashedInput, StringComparison.Ordinal))
+            //var hashedInput = HashPassword(request.Password);
+            if (!string.Equals(player.Password, request.Password, StringComparison.Ordinal))
                 return Unauthorized("Invalid password.");
 
             // 2. Create new character and save to file
@@ -73,6 +73,9 @@ namespace SurvivalOnWebApi.Controllers
             // 4. Save player data (encrypted, as before)
             string? error;
             if (!PlayerData.SaveNewPlayer(player, out error))
+                return StatusCode(500, error);
+
+            if (!PlayerData.UpdatePlayerDataByUserName(player, out error))
                 return StatusCode(500, error);
 
             return Ok(new { CharacterId = character.Id, GameState = gameState });
