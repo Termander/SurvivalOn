@@ -18,6 +18,11 @@ namespace SurvivalCL
         public const int MinutesPerDay = 1200;
         public const int MinutesPerHour = 60;
 
+        public GameState(bool v)
+        {
+            StartGame();
+        }
+
         // State
         public int Year { get; private set; } = 1;
         public int DayOfYear { get; private set; } = 1; // 1..400
@@ -142,6 +147,21 @@ namespace SurvivalCL
                     break;
             }
             if (Storm) Weather = WeatherType.Storm;
+        }
+
+        internal void StartGame()
+        {
+            Year = 1;
+            DayOfYear = 1;
+            Hour = 6;      // Set to 6 for morning/day start
+            Minute = 0;
+
+            Weather = WeatherType.Sunny;
+            Temperature = 25f;
+            RainLevel = 0f;
+            Storm = false;
+
+            UpdateDayPartDurations();
         }
     }
 }

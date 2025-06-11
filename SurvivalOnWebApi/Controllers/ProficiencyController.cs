@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.Json.Serialization;
 
 namespace SurvivalOnWebApi.Controllers
 {
@@ -48,7 +49,8 @@ namespace SurvivalOnWebApi.Controllers
             var json = System.IO.File.ReadAllText(ProficiencyFilePath);
             return System.Text.Json.JsonSerializer.Deserialize<List<Proficiency>>(json, new System.Text.Json.JsonSerializerOptions
             {
-                PropertyNameCaseInsensitive = true
+                PropertyNameCaseInsensitive = true,
+                Converters = { new JsonStringEnumConverter() }
             }) ?? new List<Proficiency>();
         }
     }

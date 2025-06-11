@@ -59,15 +59,15 @@
     },
     "PrerequisiteProficiencies": {},
     "BonusAbilities": {},
-    "ImagePath": "",
+    "ImagePath": "fire.png",
     "BonusDescription": "Improves success rate when fishing."
   },
   {
     "UniqueId": "b7e1c2d3-4f5a-6b7c-8d9e-0f1a2b3c4d5e",
     "Name": "Swordsmanship",
-    "Description": "Skill with swords and melee weapons.",
+    "Description": "Skill with basic swords weapons.",
     "Type": "Combat",
-    "IsBasic": true,
+    "IsBasic": false,
     "AbilityPrerequisites": { "Strength": 10 },
     "PrerequisiteProficiencies": {},
     "BonusAbilities": { "Strength": 1 },
@@ -83,7 +83,7 @@
     "AbilityPrerequisites": { "Dexterity": 10 },
     "PrerequisiteProficiencies": {},
     "BonusAbilities": { "Dexterity": 1 },
-    "ImagePath": "",
+    "ImagePath": "fire.png",
     "BonusDescription": "Increases ranged weapon accuracy."
   },
   {
@@ -95,7 +95,7 @@
     "AbilityPrerequisites": { "Constitution": 10 },
     "PrerequisiteProficiencies": {},
     "BonusAbilities": { "Constitution": 1 },
-    "ImagePath": "",
+    "ImagePath": "fire.png",
     "BonusDescription": "Improves defense when using shields."
   },
   {

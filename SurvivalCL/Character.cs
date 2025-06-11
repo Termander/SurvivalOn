@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text.Json;
 
 namespace SurvivalCL
 {
@@ -35,7 +36,7 @@ namespace SurvivalCL
         public int Charisma { get; set; }
 
         // State
-        public int MaxHP { get; set; } = 100;
+        public int MaxHP { get; set; } = 100; // Default max HP
         private int _hp;
         public int HP
         {
@@ -83,10 +84,10 @@ namespace SurvivalCL
             Name = name;
             MaxHP = 100;
             HP = MaxHP;
-            Fatigue = 0;
+            Fatigue = 100;
             Stamina = 100;
-            Hunger = 0;
-            Sleep = 0;
+            Hunger = 100;
+            Sleep = 100;
         }
 
         // Add or update a proficiency level
@@ -100,5 +101,58 @@ namespace SurvivalCL
         {
             return ProficiencyLevels.TryGetValue(name, out var level) ? level : 0;
         }
+
+        public static void SaveCharacterToFile(Character character, GameState? gameState   )
+        {
+            if(gameState == null)
+                gameState = new GameState(true); // Create a new GameState if not provided
+
+            string directory = "DynamicData/Character";
+            Directory.CreateDirectory(directory);
+            var charFile = Path.Combine(directory, $"{character.Id}.json");
+
+            var wrapper = new CharacterGameStateWrapper
+            {
+                Character = character,
+                GameState = gameState
+            };
+
+            var json = JsonSerializer.Serialize(wrapper, new JsonSerializerOptions { WriteIndented = true });
+            var encrypted = CryptoHelper.Encrypt(json);
+            File.WriteAllText(charFile, encrypted);
+        }
+
+        public static (Character? character, GameState? gameState) LoadCharacterWithGameState(Guid id)
+        {
+            string directory = "DynamicData/Character";
+            var charFile = Path.Combine(directory, $"{id}.json");
+            if (!File.Exists(charFile))
+                return (null, null);
+
+            var encrypted = File.ReadAllText(charFile);
+            var json = CryptoHelper.Decrypt(encrypted);
+            var wrapper = JsonSerializer.Deserialize<CharacterGameStateWrapper>(json);
+            return (wrapper?.Character, wrapper?.GameState);
+        }
+
+        public static void UpdateCharacter(Character character, GameState? gameState)
+        {
+            SaveCharacterToFile(character, gameState);
+        }
+        public static Character? LoadCharacter(Guid id)
+        {
+            var (character, _) = LoadCharacterWithGameState(id);
+            return character;
+        }
+
     }
+
+
+    public class CharacterGameStateWrapper
+    {
+        public Character Character { get; set; } = null!;
+        public GameState GameState { get; set; } = null!;
+    }
+
+
 }

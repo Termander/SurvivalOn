@@ -112,3 +112,19 @@ code {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
     text-align: start;
 }
+.proficiency-popup-header {
+    display: flex;
+    align-items: center;
+    height: 44px;
+    padding: 4px 12px;
+    background: #f5f5f5;
+    border-bottom: 1px solid #eee;
+    position: relative;
+}
+
+.proficiency-popup-image {
+    width: 36px;
+    height: 36px;
+    object-fit: cover;
+    border-radius: 4px;
+}

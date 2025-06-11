@@ -16,6 +16,18 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="wwwroot\Images\Locations\forest_A_00001.png" />
+    <None Include="wwwroot\Images\Locations\forest_A_00002.png" />
+    <None Include="wwwroot\Images\Locations\forest_P_00001.png" />
+    <None Include="wwwroot\Images\Locations\forest_P_00002.png" />
+    <None Include="wwwroot\Images\Locations\forest_S_00001.png" />
+    <None Include="wwwroot\Images\Locations\forest_S_00002.png" />
+    <None Include="wwwroot\Images\Locations\forest_W_00001.png" />
+    <None Include="wwwroot\Images\Locations\forest_W_00002.png" />
+    <None Include="wwwroot\Images\Proficiencies\fire.png" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\SurvivalCL\SurvivalCL.csproj" />
   </ItemGroup>
 
