@@ -6,6 +6,26 @@ namespace SurvivalCL
     public enum DayPart { Night, Dawn, Day, Dusk }
     public enum WeatherType { Sunny, Cloudy, Rainy, Storm }
 
+    public enum  WeekDay 
+    {
+        Sunday, Moonday, Earthday, Fireday, Waterday, Windday, Starday
+    }
+
+
+
+
+    public enum MonthName
+    {
+        // Spring
+        March, April, May, Octavia,
+        // Summer
+        June, July, August, Pompeian,
+        // Autumn
+        September, October, November, Tiberian,
+        // Winter
+        December, January, February, Quartus
+    }
+
     public class GameState
     {
         // Calendar constants
@@ -49,6 +69,15 @@ namespace SurvivalCL
         public int DuskDuration { get; private set; }
 
         public DayPart CurrentDayPart => GetDayPart();
+        public MonthName CurrentMonthName => (MonthName)(Month - 1);
+        // public WeekDay CurrentWeekDay => (WeekDay)(((DayOfYear - 1) % 7));
+        public WeekDay CurrentWeekDay => (WeekDay)weekDayIndex;
+        public string CurrentWeekDayDisplayName => CurrentWeekDay.ToString();
+        public string CurrentSeasonDisplayName => CurrentSeason.ToString();
+
+        private int weekDayIndex = 0; // 0 = first weekday (Monday/Sun/...)
+
+        
 
         // Advance time by minutes
         public void AdvanceTime(int minutes)
@@ -71,13 +100,27 @@ namespace SurvivalCL
             Temperature = Math.Clamp(temperature, -30f, 50f); // realistic bounds
         }
 
-        private void NextDay()
+        /*private void NextDay()
         {
             DayOfYear++;
             if (DayOfYear > DaysPerYear)
             {
                 DayOfYear = 1;
                 Year++;
+            }
+            UpdateWeather();
+            UpdateDayPartDurations();
+        }*/
+
+        private void NextDay()
+        {
+            DayOfYear++;
+            weekDayIndex = (weekDayIndex + 1) % 7;
+            if (DayOfYear > DaysPerYear)
+            {
+                DayOfYear = 1;
+                Year++;
+                // weekDayIndex is NOT reset, so weekday continues
             }
             UpdateWeather();
             UpdateDayPartDurations();
@@ -157,6 +200,8 @@ namespace SurvivalCL
             DayOfYear = 1;
             Hour = 6;      // Set to 6 for morning/day start
             Minute = 0;
+            
+            weekDayIndex = 0; // Start at first weekday
 
             Weather = WeatherType.Sunny;
             Temperature = 25f;
@@ -165,5 +210,7 @@ namespace SurvivalCL
 
             UpdateDayPartDurations();
         }
+
+       
     }
 }

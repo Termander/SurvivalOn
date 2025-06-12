@@ -12,8 +12,32 @@ namespace SurvivalOn.Services
         public string? Username { get; set; }
         public string? HashedPassword { get; set; }
         public Guid? CharGuid { get; set; }
-        public Character? activeChar { get; set; }
-        public GameState? stateOfGame { get; set; }
+
+        public event Action? StateChanged;
+
+        public void NotifyStateChanged() => StateChanged?.Invoke();
+
+        public Character? activeChar
+        {
+            get => _activeChar;
+            set
+            {
+                _activeChar = value;
+                NotifyStateChanged();
+            }
+        }
+        private Character? _activeChar;
+
+        public GameState? stateOfGame
+        {
+            get => _stateOfGame;
+            set
+            {
+                _stateOfGame = value;
+                NotifyStateChanged();
+            }
+        }
+        private GameState? _stateOfGame;
 
         public UserSession(IJSRuntime jsRuntime)
         {

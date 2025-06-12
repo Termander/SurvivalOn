@@ -1,12 +1,65 @@
 ﻿@inherits LayoutComponentBase
+@inject SurvivalOn.Services.UserSession UserSession
+
+@code {
+    protected override void OnInitialized()
+    {
+        UserSession.StateChanged += OnUserSessionChanged;
+    }
+
+    private void OnUserSessionChanged()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        UserSession.StateChanged -= OnUserSessionChanged;
+    }
+
+    private string GetWeatherIcon(SurvivalCL.WeatherType weather)
+    {
+        return weather switch
+        {
+            SurvivalCL.WeatherType.Sunny => "☀️",
+            SurvivalCL.WeatherType.Cloudy => "☁️",
+            SurvivalCL.WeatherType.Rainy => "🌧️",
+            SurvivalCL.WeatherType.Storm => "⛈️",
+            _ => ""
+        };
+    }
+}
+
 <div class="page">
     <div class="sidebar">
         <NavMenu />
     </div>
 
     <main>
-        <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
+        <div class="top-row px-4" style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                @if (UserSession.activeChar is not null)
+                {
+                    <span>@UserSession.activeChar.Name</span>
+                }
+            </div>
+            <div style="margin-left: auto; display: flex; align-items: center;">
+                @if (UserSession.stateOfGame is not null)
+                {
+                    var state = UserSession.stateOfGame;
+                    <span>
+                        Year @state.Year,
+                        @state.CurrentSeasonDisplayName,
+                        @state.CurrentMonthName.ToString() @state.DayOfMonth
+                        (@state.CurrentWeekDayDisplayName)
+                        @state.Hour.ToString("D2"):@state.Minute.ToString("D2")
+                        @state.Weather
+                        <span style="font-size:1.2em; margin-left:0.25em;">@GetWeatherIcon(state.Weather)</span>
+                    </span>
+                }
+                <a href="/about">About</a>
+            </div>
+            
         </div>
 
         <article class="content px-4">
