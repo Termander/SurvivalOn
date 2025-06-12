@@ -72,8 +72,8 @@ namespace SurvivalOnWebApi.Controllers
 
             // 4. Save player data (encrypted, as before)
             string? error;
-            if (!PlayerData.SaveNewPlayer(player, out error))
-                return StatusCode(500, error);
+            //if (!PlayerData.SaveNewPlayer(player, out error))
+            //    return StatusCode(500, error);
 
             if (!PlayerData.UpdatePlayerDataByUserName(player, out error))
                 return StatusCode(500, error);
@@ -100,6 +100,16 @@ namespace SurvivalOnWebApi.Controllers
             character.ProficiencyLevels = updated.ProficiencyLevels;
 
             return NoContent();
+        }
+
+        [HttpGet("load/{id}")]
+        public IActionResult LoadCharacterWithGameState(Guid id)
+        {
+            var (character, gameState) = Character.LoadCharacterWithGameState(id);
+            if (character == null)
+                return NotFound("Character not found.");
+
+            return Ok(new { Character = character, GameState = gameState });
         }
 
         [HttpDelete("{id}")]

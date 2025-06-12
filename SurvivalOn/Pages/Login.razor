@@ -132,7 +132,8 @@
                     {
                         UserSession.CharGuid = null;
                     }
-                        Navigation.NavigateTo($"/home?userId={player.Id}");
+                    await UserSession.SaveSessionAsync();
+                    Navigation.NavigateTo($"/home?userId={player.Id}");
                     return;
                 }
             }

@@ -18,6 +18,8 @@ namespace SurvivalCL
         public const int MinutesPerDay = 1200;
         public const int MinutesPerHour = 60;
 
+
+        public GameState() { }
         public GameState(bool v)
         {
             StartGame();

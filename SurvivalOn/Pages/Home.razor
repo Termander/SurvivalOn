@@ -1,7 +1,8 @@
 ﻿@page "/home"
 @using SurvivalCL
-
 @inject SurvivalOn.Services.UserSession UserSession
+@inject HttpClient Http
+@inject IConfiguration Configuration
 
 <PageTitle>Home</PageTitle>
 
@@ -16,13 +17,40 @@ Welcome to your new app.
 @code {
     private bool showCharacterModal = false;
     private CharacterCreation? characterCreation;
+    private string? apiUrl;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
+        await UserSession.LoadSessionAsync();
+
         // Check if CharGuid is null or empty
         if (UserSession.CharGuid == null || UserSession.CharGuid == Guid.Empty)
         {
             showCharacterModal = true;
+        }
+        else
+        {
+            apiUrl = Configuration["Api:BaseUrlCharacter"];
+            // Load character and game state from API
+            var response = await Http.GetAsync($"{apiUrl}/load/{UserSession.CharGuid}");
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<LoadCharacterResult>();
+                if (result is not null)
+                {
+                    UserSession.activeChar = result.Character;
+                    UserSession.stateOfGame = result.GameState;
+                    await UserSession.SaveSessionAsync();
+                }
+                else
+                {
+                    showCharacterModal = true;
+                }
+            }
+            else
+            {
+                showCharacterModal = true;
+            }
         }
     }
 
@@ -31,8 +59,14 @@ Welcome to your new app.
         await Task.CompletedTask;
 
         UserSession.CharGuid = character.Id;
+        await UserSession.SaveSessionAsync();
         showCharacterModal = false;
         StateHasChanged();
+    }
+    private class LoadCharacterResult
+    {
+        public Character Character { get; set; } = null!;
+        public GameState GameState { get; set; } = null!;
     }
 }
 

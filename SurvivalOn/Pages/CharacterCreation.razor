@@ -4,257 +4,6 @@
 @inject NavigationManager Navigation
 @inject SurvivalOn.Services.UserSession UserSession
 
-@code {
-    [Parameter] public EventCallback<Character> OnCharacterCreated { get; set; }
-
-    private string name = "";
-    private int[] originalStats = new int[6];
-    private int[] currentStats = new int[6];
-    private int bonusPoints;
-    private int minStat = 10;
-    private int maxStat = 24;
-    private string? apiUrl;
-
-    // Tab state
-    private int activeTab = 0;
-
-    private List<Proficiency> allBasicProficiencies = new();
-    private bool isLoadingProficiencies = true;
-
-    private List<Proficiency> combatProficiencies = new();
-    private List<Proficiency> buildProficiencies = new();
-    private List<Proficiency> generalProficiencies = new();
-
-    // Proficiency groups and descriptions (replace with your actual data if needed)
-    /*private Dictionary<string, string> combatProficiencies = new()
-    {
-        { "Swordsmanship", "Skill with swords and melee weapons." },
-        { "Archery", "Skill with bows and ranged weapons." },
-        { "Shield Defense", "Using shields for protection in combat." },
-        { "Unarmed Combat", "Fighting without weapons." },
-        { "Tactics", "Strategic planning and battlefield awareness." },
-        { "Survival", "Living off the land and wilderness skills." },
-        { "Tracking", "Following trails and signs of creatures." },
-        { "Animal Handling", "Training and controlling animals." },
-        { "First Aid", "Basic medical treatment for injuries." },
-        { "Endurance", "Withstanding physical challenges and fatigue." }
-    };
-    private Dictionary<string, string> buildProficiencies = new()
-    {
-        { "Carpentry", "Building and repairing wooden structures." },
-        { "Smithing", "Forging and repairing metal items." },
-        { "StoneMason", "Making stone building." },
-        { "Leatherworking", "Crafting and repairing leather items." },
-        { "Tailoring", "Making and repairing clothing." },
-        { "Engineering", "Designing and building complex structures." },
-        { "Fishing", "Catching fish for food." },
-        { "Mining", "Extracting minerals and ores from the earth." },
-        { "Hunting", "Tracking and hunting wild animals." },
-        { "Trapping", "Setting traps for animals." }
-    };
-    private Dictionary<string, string> generalProficiencies = new()
-    {
-        { "Survival", "Finding food, water, and shelter in the wild." },
-        { "Persuasion", "Convincing others and negotiation." },
-        { "Stealth", "Moving quietly and avoiding detection." },
-        { "Alchemy", "Creating potions and elixirs." },
-        { "Cooking", "Preparing food and meals." }
-    };*/
-
-    private HashSet<string> selectedProficiencies = new();
-    private string? popupProficiency;
-    private string? popupDescription;
-    private bool showPopup = false;
-
-    private int str { get => currentStats[0]; set => UpdateStat(0, value); }
-    private int dex { get => currentStats[1]; set => UpdateStat(1, value); }
-    private int con { get => currentStats[2]; set => UpdateStat(2, value); }
-    private int intel { get => currentStats[3]; set => UpdateStat(3, value); }
-    private int wis { get => currentStats[4]; set => UpdateStat(4, value); }
-    private int cha { get => currentStats[5]; set => UpdateStat(5, value); }
-
-    private string combatHeader = "combat";
-    private string buildHeader = "build";
-    private string generalHeader = "general";
-
-    /* protected override void OnInitialized()
-     {
-         RollStats();
-     }*/
-    protected override async Task OnInitializedAsync()
-    {
-        apiUrl = Configuration["Api:BaseUrlProficiency"];
-        RollStats();
-        await LoadBasicProficiencies();
-    }
-
-    private async Task LoadBasicProficiencies()
-    {
-        try
-        {
-           // var result = await Http.GetFromJsonAsync<List<Proficiency>>(apiUrl);
-            // allBasicProficiencies = result ?? new List<Proficiency>();
-            
-            var basicApiUrl = $"{apiUrl}/basic";
-            var result = await Http.GetFromJsonAsync<List<Proficiency>>(basicApiUrl);
-            allBasicProficiencies = result ?? new List<Proficiency>();
-
-            // Group by ProficiencyType
-            combatProficiencies = allBasicProficiencies.Where(p => p.Type == ProficiencyType.Combat).ToList();
-            buildProficiencies = allBasicProficiencies.Where(p => p.Type == ProficiencyType.Build).ToList();
-            generalProficiencies = allBasicProficiencies.Where(p => p.Type == ProficiencyType.General).ToList();
-        }
-        finally
-        {
-            isLoadingProficiencies = false;
-        }
-    }
-
-    private void RollStats()
-    {
-        var rng = new Random();
-        for (int i = 0; i < 6; i++)
-        {
-            originalStats[i] = rng.Next(minStat, maxStat + 1);
-            currentStats[i] = originalStats[i];
-        }
-        CalculateBonus();
-    }
-
-    private void CalculateBonus()
-    {
-        double avg = currentStats.Average();
-        if (avg < 12) bonusPoints = 6;
-        else if (avg < 13) bonusPoints = 5;
-        else if (avg < 15) bonusPoints = 4;
-        else if (avg < 17) bonusPoints = 3;
-        else if (avg < 19) bonusPoints = 2;
-        else bonusPoints = 1;
-    }
-
-    private int BonusPointsLeft =>
-        bonusPoints + currentStats.Select((val, idx) => originalStats[idx] - val).Sum();
-
-    private void UpdateStat(int index, int value)
-    {
-        int min = originalStats[index] - 1;
-        int max = maxStat;
-        value = Math.Clamp(value, min, max);
-
-        int used = currentStats.Sum() - originalStats.Sum();
-        int available = bonusPoints - used;
-
-        int diff = value - currentStats[index];
-
-        // If increasing, check if enough bonus points
-        if (diff > 0 && diff > BonusPointsLeft)
-            return;
-
-        // If decreasing, allow as long as not below min
-        if (value < min)
-            return;
-
-        currentStats[index] = value;
-        StateHasChanged();
-    }
-
-    /*  private void ToggleProficiency(string name)
-      {
-          if (selectedProficiencies.Contains(name))
-              selectedProficiencies.Remove(name);
-          else
-              selectedProficiencies.Add(name);
-      }
-
-      private void ShowProficiencyInfo(string name, string description)
-      {
-          popupProficiency = name;
-          popupDescription = description;
-          showPopup = true;
-      }*/
-
-    private void ClosePopup()
-    {
-        showPopup = false;
-    }
-    private void CreateCharacter()
-    {
-        var character = new Character(CharacterType.PC, name)
-        {
-            Strength = str,
-            Dexterity = dex,
-            Constitution = con,
-            Intelligence = intel,
-            Wisdom = wis,
-            Charisma = cha
-        };
-
-        foreach (var profName in selectedProficiencies)
-        {
-            character.SetProficiencyLevel(profName, 1);
-        }
-
-        OnCharacterCreated.InvokeAsync(character);
-    }
-    private async Task CreateCharacterAsync()
-    {
-        var character = new Character(CharacterType.PC, name)
-        {
-            Strength = str,
-            Dexterity = dex,
-            Constitution = con,
-            Intelligence = intel,
-            Wisdom = wis,
-            Charisma = cha
-        };
-
-        foreach (var profName in selectedProficiencies)
-        {
-            character.SetProficiencyLevel(profName, 1);
-        }
-
-        var apiBase = Configuration["Api:BaseUrlCharacter"] ?? "api/character";
-        var request = new
-        {
-            UserName = UserSession.Username,
-            Password = UserSession.HashedPassword,
-            Character = character
-        };
-
-        var response = await Http.PostAsJsonAsync($"{apiBase}/create", request);
-
-        if (response.IsSuccessStatusCode)
-        {
-            var result = await response.Content.ReadFromJsonAsync<CreateCharacterResult>();
-            if (result is not null)
-            {
-                character.Id = result.CharacterId;
-                await OnCharacterCreated.InvokeAsync(character);
-                UserSession.activeChar = character;
-                UserSession.stateOfGame = result.GameState;
-                showPopup = false; // Close popup
-                Navigation.NavigateTo("/"); // Go to Home
-            }
-            /*var newId = await response.Content.ReadFromJsonAsync<Guid>();
-            character.Id = newId;
-            await OnCharacterCreated.InvokeAsync(character);
-            showPopup = false; // Close popup
-            UserSession.activeChar = character;
-            Navigation.NavigateTo("/"); // Go to Home*/
-        }
-        else
-        {
-            var error = await response.Content.ReadAsStringAsync();
-            // Handle error (show message to user, etc.)
-        }
-    }
-    private class CreateCharacterResult  
-    {  
-        public Guid CharacterId { get; set; }  
-        public GameState GameState { get; set; } = new GameState(false);  
-    }
-    private bool CanCreate => !string.IsNullOrWhiteSpace(name) && BonusPointsLeft == 0;
-}
 @if (true) // Always visible as a modal for now
 {
     <div class="modal show d-block" tabindex="-1" style="background:rgba(0,0,0,0.5);">
@@ -456,6 +205,8 @@
 
     private Proficiency? popupProficiencyObj;
 
+
+
     private void ShowProficiencyInfo(string name, string description, string group)
     {
         popupProficiencyObj = combatProficiencies.Concat(buildProficiencies).Concat(generalProficiencies)
@@ -552,15 +303,6 @@
         return !selectedProficiencies.Contains(name) && selected >= limit;
     }
 
-
-    // private void ShowProficiencyInfo(string name, string description, string group)
-    // {
-    //     popupProficiency = name;
-    //     popupDescription = description;
-    //     popupGroup = group;
-    //     showPopup = true;
-    // }
-
     private string GetPopupHeaderStyle()
     {
         return popupGroup switch
@@ -581,4 +323,195 @@
             _ => "&#9432;"             // ℹ
         };
     }
+
+    private class CreateCharacterResult
+    {
+        public Guid CharacterId { get; set; }
+        public GameState GameState { get; set; } = new GameState(false);
+    }
+
+    [Parameter] public EventCallback<Character> OnCharacterCreated { get; set; }
+
+
+    private string name = "";
+    private int[] originalStats = new int[6];
+    private int[] currentStats = new int[6];
+    private int bonusPoints;
+    private int minStat = 10;
+    private int maxStat = 24;
+    private string? apiUrl;
+
+    // Tab state
+    private int activeTab = 0;
+
+    private List<Proficiency> allBasicProficiencies = new();
+    private bool isLoadingProficiencies = true;
+
+    private List<Proficiency> combatProficiencies = new();
+    private List<Proficiency> buildProficiencies = new();
+    private List<Proficiency> generalProficiencies = new();
+
+    private bool CanCreate => !string.IsNullOrWhiteSpace(name) && BonusPointsLeft == 0;
+
+    private HashSet<string> selectedProficiencies = new();
+    private string? popupProficiency;
+    private string? popupDescription;
+    private bool showPopup = false;
+
+    private int str { get => currentStats[0]; set => UpdateStat(0, value); }
+    private int dex { get => currentStats[1]; set => UpdateStat(1, value); }
+    private int con { get => currentStats[2]; set => UpdateStat(2, value); }
+    private int intel { get => currentStats[3]; set => UpdateStat(3, value); }
+    private int wis { get => currentStats[4]; set => UpdateStat(4, value); }
+    private int cha { get => currentStats[5]; set => UpdateStat(5, value); }
+
+    private string combatHeader = "combat";
+    private string buildHeader = "build";
+    private string generalHeader = "general";
+
+    protected override async Task OnInitializedAsync()
+    {
+        apiUrl = Configuration["Api:BaseUrlProficiency"];
+        RollStats();
+        await LoadBasicProficiencies();
+    }
+
+    private async Task LoadBasicProficiencies()
+    {
+        try
+        {
+
+            var basicApiUrl = $"{apiUrl}/basic";
+            var result = await Http.GetFromJsonAsync<List<Proficiency>>(basicApiUrl);
+            allBasicProficiencies = result ?? new List<Proficiency>();
+
+            combatProficiencies = allBasicProficiencies.Where(p => p.Type == ProficiencyType.Combat).ToList();
+            buildProficiencies = allBasicProficiencies.Where(p => p.Type == ProficiencyType.Build).ToList();
+            generalProficiencies = allBasicProficiencies.Where(p => p.Type == ProficiencyType.General).ToList();
+        }
+        finally
+        {
+            isLoadingProficiencies = false;
+        }
+    }
+
+    private void RollStats()
+    {
+        var rng = new Random();
+        for (int i = 0; i < 6; i++)
+        {
+            originalStats[i] = rng.Next(minStat, maxStat + 1);
+            currentStats[i] = originalStats[i];
+        }
+        CalculateBonus();
+    }
+
+    private void CalculateBonus()
+    {
+        double avg = currentStats.Average();
+        if (avg < 12) bonusPoints = 6;
+        else if (avg < 13) bonusPoints = 5;
+        else if (avg < 15) bonusPoints = 4;
+        else if (avg < 17) bonusPoints = 3;
+        else if (avg < 19) bonusPoints = 2;
+        else bonusPoints = 1;
+    }
+
+    private int BonusPointsLeft =>
+        bonusPoints + currentStats.Select((val, idx) => originalStats[idx] - val).Sum();
+
+    private void UpdateStat(int index, int value)
+    {
+        int min = originalStats[index] - 1;
+        int max = maxStat;
+        value = Math.Clamp(value, min, max);
+
+        int used = currentStats.Sum() - originalStats.Sum();
+        int available = bonusPoints - used;
+
+        int diff = value - currentStats[index];
+
+        if (diff > 0 && diff > BonusPointsLeft)
+            return;
+
+        if (value < min)
+            return;
+
+        currentStats[index] = value;
+        StateHasChanged();
+    }
+
+    private void ClosePopup()
+    {
+        showPopup = false;
+    }
+    private void CreateCharacter()
+    {
+        var character = new Character(CharacterType.PC, name)
+        {
+            Strength = str,
+            Dexterity = dex,
+            Constitution = con,
+            Intelligence = intel,
+            Wisdom = wis,
+            Charisma = cha
+        };
+
+        foreach (var profName in selectedProficiencies)
+        {
+            character.SetProficiencyLevel(profName, 1);
+        }
+
+        OnCharacterCreated.InvokeAsync(character);
+    }
+    private async Task CreateCharacterAsync()
+    {
+        var character = new Character(CharacterType.PC, name)
+        {
+            Strength = str,
+            Dexterity = dex,
+            Constitution = con,
+            Intelligence = intel,
+            Wisdom = wis,
+            Charisma = cha
+        };
+
+        foreach (var profName in selectedProficiencies)
+        {
+            character.SetProficiencyLevel(profName, 1);
+        }
+
+        var apiBase = Configuration["Api:BaseUrlCharacter"] ?? "api/character";
+        var request = new
+        {
+            UserName = UserSession.Username,
+            Password = UserSession.HashedPassword,
+            Character = character
+        };
+
+        var response = await Http.PostAsJsonAsync($"{apiBase}/create", request);
+
+        if (response.IsSuccessStatusCode)
+        {
+            var result = await response.Content.ReadFromJsonAsync<CreateCharacterResult>();
+            if (result is not null)
+            {
+                character.Id = result.CharacterId;
+                await OnCharacterCreated.InvokeAsync(character);
+                UserSession.activeChar = character;
+                UserSession.stateOfGame = result.GameState;
+                await UserSession.SaveSessionAsync();
+                showPopup = false; // Close popup
+                Navigation.NavigateTo("/"); // Go to Home
+            }
+        }
+        else
+        {
+            var error = await response.Content.ReadAsStringAsync();
+        }
+    }
+
+
 }
+
+   

@@ -107,7 +107,7 @@ namespace SurvivalCL
             if(gameState == null)
                 gameState = new GameState(true); // Create a new GameState if not provided
 
-            string directory = "DynamicData/Character";
+            string directory = "DynamicData/Character/" + character.Id;
             Directory.CreateDirectory(directory);
             var charFile = Path.Combine(directory, $"{character.Id}.json");
 
@@ -124,7 +124,7 @@ namespace SurvivalCL
 
         public static (Character? character, GameState? gameState) LoadCharacterWithGameState(Guid id)
         {
-            string directory = "DynamicData/Character";
+            string directory = "DynamicData/Character/" + id;
             var charFile = Path.Combine(directory, $"{id}.json");
             if (!File.Exists(charFile))
                 return (null, null);
