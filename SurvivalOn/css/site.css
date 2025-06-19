@@ -15,3 +15,54 @@
 .location-description {
     flex: 1;
 }
+.warning-bar {
+    background: #ffef96;
+    color: #b22222;
+    padding: 10px 20px;
+    border-bottom: 2px solid #b22222;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 1.5em;
+}
+
+.warning-item {
+    margin-left: 1em;
+}
+
+.main-content {
+    display: flex;
+    margin-top: 20px;
+}
+
+.left-panel {
+    width: 200px;
+    min-width: 200px;
+    border-right: 2px solid #e0e0e0;
+    padding: 10px;
+}
+
+.body-panel {
+    border: 2px solid #2563eb;
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    background: #f8fafc;
+}
+
+.body-placeholder {
+    font-size: 80px;
+    color: #2563eb;
+}
+
+.right-panel {
+    flex: 1;
+    padding: 20px;
+}
+
+.condition-desc-panel {
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    background: #f1f5f9;
+    padding: 16px;
+}

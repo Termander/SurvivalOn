@@ -6,8 +6,37 @@
 
 <PageTitle>Home</PageTitle>
 
-<h1>Hello, world!</h1>
-Welcome to your new app.
+@if (showWarningBar)
+{
+    <div class="warning-bar">
+        <strong>Warning:</strong>
+        @foreach (var warning in warnings)
+        {
+            <span class="warning-item">@warning</span>
+        }
+    </div>
+}
+
+<div class="main-content">
+    <div class="left-panel">
+        <div class="body-panel">
+            <!-- Replace with an actual SVG or image if you have one -->
+            <div class="body-placeholder">🧍</div>
+        </div>
+    </div>
+    <div class="right-panel">
+        <div class="condition-desc-panel">
+            <h5>Condition Details</h5>
+            <ul>
+                <li><b>Fatigue:</b> @CharacterStatusDescriptions.GetFatigueDescription(UserSession.activeChar?.Fatigue ?? 100)</li>
+                <li><b>Stamina:</b> @CharacterStatusDescriptions.GetStaminaDescription(UserSession.activeChar?.Stamina ?? 100)</li>
+                <li><b>Hunger:</b> @CharacterStatusDescriptions.GetHungerDescription(UserSession.activeChar?.Hunger ?? 100)</li>
+                <li><b>Sleep:</b> @CharacterStatusDescriptions.GetSleepDescription(UserSession.activeChar?.Sleep ?? 100)</li>
+                <li><b>Condition:</b> @CharacterStatusDescriptions.GetConditionDescription(UserSession.activeChar?.Condition ?? CharacterCondition.Healthy)</li>
+            </ul>
+        </div>
+    </div>
+</div>
 
 @if (showCharacterModal)
 {
@@ -18,6 +47,8 @@ Welcome to your new app.
     private bool showCharacterModal = false;
     private CharacterCreation? characterCreation;
     private string? apiUrl;
+    private bool showWarningBar = false;
+    private List<string> warnings = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -41,6 +72,7 @@ Welcome to your new app.
                     UserSession.activeChar = result.Character;
                     UserSession.stateOfGame = result.GameState;
                     await UserSession.SaveSessionAsync();
+                    CheckWarnings();
                 }
                 else
                 {
@@ -52,6 +84,29 @@ Welcome to your new app.
                 showCharacterModal = true;
             }
         }
+    }
+    private void CheckWarnings()
+    {
+        warnings.Clear();
+        var c = UserSession.activeChar;
+        if (c == null) return;
+
+        if (c.HP < 21)
+            warnings.Add("Badly injured");
+
+        if (c.Fatigue < 21)
+            warnings.Add("Severe fatigue");
+
+        if (c.Stamina < 21)
+            warnings.Add("Severe exhaustion");
+
+        if (c.Sleep < 21)
+            warnings.Add("Severe sleep deprivation");
+
+        if (warnings.Count > 0)
+            showWarningBar = true;
+        else
+            showWarningBar = false;
     }
 
     private async Task OnCharacterCreated(Character character)

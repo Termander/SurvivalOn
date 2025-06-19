@@ -48,7 +48,7 @@ namespace SurvivalCL
         // State
         public int Year { get; private set; } = 1;
         public int DayOfYear { get; private set; } = 1; // 1..400
-        public int Hour { get; private set; } = 0;      // 0..19
+        public int Hour { get; private set; } = 6;      // 0..19
         public int Minute { get; private set; } = 0;    // 0..59
 
         // Weather
