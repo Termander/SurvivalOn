@@ -66,3 +66,14 @@
     background: #f1f5f9;
     padding: 16px;
 }
+.body-image-crop {
+    width: 120px; /* width of one human in the sprite */
+    height: 240px; /* height of the human image */
+    background-image: url('/images/human.jpg');
+    background-repeat: no-repeat;
+    background-position: -120px 0; /* shift left by one human's width */
+    background-size: 240px 240px; /* total width = 2 * 120px if two humans side by side */
+    border-radius: 8px;
+    border: 2px solid #2563eb;
+    margin: 0 auto;
+}

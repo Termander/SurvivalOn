@@ -77,7 +77,7 @@ namespace SurvivalCL
 
         private int weekDayIndex = 0; // 0 = first weekday (Monday/Sun/...)
 
-        
+        private float _lastHourTemperature = 20f; // Track last hour's temperature
 
         // Advance time by minutes
         public void AdvanceTime(int minutes)
@@ -211,6 +211,57 @@ namespace SurvivalCL
             UpdateDayPartDurations();
         }
 
-       
+        /// <summary>
+        /// Calculates the ambient temperature for the current hour, clamped to a max change of ±5°C from the previous hour.
+        /// </summary>
+        public float GetAmbientTemperature()
+        {
+            // Base temperature by season
+            float baseTemp = CurrentSeason switch
+            {
+                Season.Winter => 0f,
+                Season.Spring => 12f,
+                Season.Summer => 26f,
+                Season.Autumn => 10f,
+                _ => 15f
+            };
+
+            // Weather adjustment
+            float weatherAdj = Weather switch
+            {
+                WeatherType.Sunny => 2f,
+                WeatherType.Cloudy => -1f,
+                WeatherType.Rainy => -4f,
+                WeatherType.Storm => -6f,
+                _ => 0f
+            };
+
+            // Time of day adjustment
+            float dayAdj = CurrentDayPart switch
+            {
+                DayPart.Day => 4f,
+                DayPart.Dawn => 1f,
+                DayPart.Dusk => 1f,
+                DayPart.Night => -5f,
+                _ => 0f
+            };
+
+            // Small random fluctuation for realism
+            float randomAdj = (float)(new Random(Year * 10000 + DayOfYear * 100 + Hour).NextDouble() * 2 - 1); // -1 to +1
+
+            // Calculate target temperature
+            float targetTemp = baseTemp + weatherAdj + dayAdj + randomAdj;
+
+            // Clamp the change to ±5°C from the last hour's temperature
+            float minTemp = _lastHourTemperature - 5f;
+            float maxTemp = _lastHourTemperature + 5f;
+            float clampedTemp = Math.Clamp(targetTemp, minTemp, maxTemp);
+
+            // Update last hour's temperature for next call
+            _lastHourTemperature = clampedTemp;
+
+            return clampedTemp;
+        }
+
     }
-}
+    }

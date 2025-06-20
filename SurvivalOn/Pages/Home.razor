@@ -19,22 +19,12 @@
 
 <div class="main-content">
     <div class="left-panel">
-        <div class="body-panel">
-            <!-- Replace with an actual SVG or image if you have one -->
-            <div class="body-placeholder">🧍</div>
-        </div>
+
+        <div class="body-image-crop"></div>
+
     </div>
     <div class="right-panel">
-        <div class="condition-desc-panel">
-            <h5>Condition Details</h5>
-            <ul>
-                <li><b>Fatigue:</b> @CharacterStatusDescriptions.GetFatigueDescription(UserSession.activeChar?.Fatigue ?? 100)</li>
-                <li><b>Stamina:</b> @CharacterStatusDescriptions.GetStaminaDescription(UserSession.activeChar?.Stamina ?? 100)</li>
-                <li><b>Hunger:</b> @CharacterStatusDescriptions.GetHungerDescription(UserSession.activeChar?.Hunger ?? 100)</li>
-                <li><b>Sleep:</b> @CharacterStatusDescriptions.GetSleepDescription(UserSession.activeChar?.Sleep ?? 100)</li>
-                <li><b>Condition:</b> @CharacterStatusDescriptions.GetConditionDescription(UserSession.activeChar?.Condition ?? CharacterCondition.Healthy)</li>
-            </ul>
-        </div>
+        <p class="status-description">🩺 @GetCombinedStatusDescription()</p>
     </div>
 </div>
 
@@ -123,6 +113,18 @@
         public Character Character { get; set; } = null!;
         public GameState GameState { get; set; } = null!;
     }
+
+    private string GetCombinedStatusDescription()
+    {
+        var fatigue = CharacterStatusDescriptions.GetFatigueDescription(UserSession.activeChar?.Fatigue ?? 100);
+        var stamina = CharacterStatusDescriptions.GetStaminaDescription(UserSession.activeChar?.Stamina ?? 100);
+        var hunger = CharacterStatusDescriptions.GetHungerDescription(UserSession.activeChar?.Hunger ?? 100);
+        var sleep = CharacterStatusDescriptions.GetSleepDescription(UserSession.activeChar?.Sleep ?? 100);
+        var condition = CharacterStatusDescriptions.GetConditionDescription(UserSession.activeChar?.Condition ?? CharacterCondition.Healthy);
+
+        return $"{fatigue} {stamina} {hunger} {sleep} {condition}";
+    }
 }
+
 
 

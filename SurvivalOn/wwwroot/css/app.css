@@ -128,3 +128,102 @@ code {
     object-fit: cover;
     border-radius: 4px;
 }
+.location-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+.location-image img {
+    display: block;
+    width: 400px;
+    height: 400px;
+    object-fit: cover;
+}
+
+.location-description {
+    flex: 1;
+}
+
+.warning-bar {
+    background: #ffef96;
+    color: #b22222;
+    padding: 10px 20px;
+    border-bottom: 2px solid #b22222;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 1.5em;
+}
+
+.warning-item {
+    margin-left: 1em;
+}
+
+.main-content {
+    display: flex;
+    margin-top: 20px;
+}
+
+.left-panel {
+    width: 250px;
+    min-width: 250px;
+    border-right: 2px solid #e0e0e0;
+    padding: 2px;
+}
+
+.body-panel {
+    border: 2px solid #2563eb;
+    border-radius: 4px;
+    padding: 2px;
+    text-align: center;
+    background: #f8fafc;
+}
+
+.body-placeholder {
+    font-size: 10px;
+    color: #2563eb;
+}
+
+.right-panel {
+    flex: 1;
+    padding: 4px;
+}
+
+.condition-desc-panel {
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    background: #f1f5f9;
+    padding: 16px;
+}
+
+.body-image-crop {
+    width: 240px; /* width of one human in the sprite */
+    height: 500px; /* height of the human image */
+    background-image: url('/images/human.jpg');
+    background-repeat: no-repeat;
+    background-position: -245px 0; /* shift left by one human's width */
+    background-size: 920px 500px; /* total width = 2 * 120px if two humans side by side */
+    border-radius: 4px;
+    border: 2px solid #2563eb;
+    margin: 0 auto;
+}
+
+.status-description {
+    background: linear-gradient(90deg, #f8fafc 60%, #dbeafe 100%);
+    border-left: 5px solid #2563eb;
+    border-radius: 8px;
+    padding: 18px 22px;
+    margin: 12px 0 0 0;
+    font-size: 1.15rem;
+    font-family: 'Segoe UI', 'Arial', sans-serif;
+    color: #1e293b;
+    box-shadow: 0 2px 8px #0001;
+    line-height: 1.7;
+    letter-spacing: 0.01em;
+    transition: background 0.3s;
+}
+.status-description:hover {
+    background: linear-gradient(90deg, #dbeafe 60%, #f8fafc 100%);
+}

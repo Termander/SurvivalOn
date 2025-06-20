@@ -28,6 +28,12 @@
             _ => ""
         };
     }
+
+    private static string FormatTemperature(float celsius)
+    {
+        var fahrenheit = celsius * 9 / 5 + 32;
+        return $"{celsius:0.#}°C ({fahrenheit:0.#}°F)";
+    }
 }
 
 <div class="page">
@@ -54,6 +60,9 @@
                         (@state.CurrentWeekDayDisplayName)
                         @state.Hour.ToString("D2"):@state.Minute.ToString("D2")
                         @state.Weather
+                        <span style="margin-left:0.75em;">
+                            @FormatTemperature(state.Temperature)
+                        </span>
                         <span style="font-size:1.2em; margin-left:0.25em;">@GetWeatherIcon(state.Weather)</span>
                     </span>
                 }
