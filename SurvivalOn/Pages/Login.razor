@@ -94,7 +94,8 @@
         apiUrl = Configuration["Api:BaseUrlPlayers"];
         if (string.IsNullOrWhiteSpace(apiUrl))
         {
-            ShowModal("Error", "API URL is not configured properly in the application settings.");
+           // ShowModal("Error", "API URL is not configured properly in the application settings.");
+            await Task.Run(() => ShowModal("Error", "API URL is not configured properly in the application settings."));
         }
 #if DEBUG
     // Auto-login in debug mode

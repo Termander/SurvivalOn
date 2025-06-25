@@ -459,7 +459,7 @@
 
         foreach (var profName in selectedProficiencies)
         {
-            character.SetProficiencyLevel(profName, 1);
+            character.AddProficiencyExperience(profName, 100);
         }
 
         OnCharacterCreated.InvokeAsync(character);
@@ -478,7 +478,7 @@
 
         foreach (var profName in selectedProficiencies)
         {
-            character.SetProficiencyLevel(profName, 1);
+            character.AddProficiencyExperience(profName, 100);
         }
 
         var apiBase = Configuration["Api:BaseUrlCharacter"] ?? "api/character";

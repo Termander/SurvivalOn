@@ -27,7 +27,19 @@ namespace SurvivalCL
 
             // Read the file as an array of encrypted player objects
             var fileContent = File.ReadAllText(filePath);
-            var encryptedPlayers = JsonSerializer.Deserialize<List<EncryptedPlayerFile>>(fileContent);
+            if (fileContent == "")
+                return null;
+            var encryptedPlayers=new List<EncryptedPlayerFile> ();
+            try
+            {
+                encryptedPlayers = JsonSerializer.Deserialize<List<EncryptedPlayerFile>>(fileContent);
+            }
+            catch (Exception)
+            {
+
+                return null;
+            }
+            
 
             if (encryptedPlayers == null)
                 return null;
@@ -68,34 +80,48 @@ namespace SurvivalCL
             {
                 var filePath = "DynamicData/players.json";
                 List<EncryptedPlayerFile> encryptedPlayers;
-
+                
+                encryptedPlayers = new List<EncryptedPlayerFile>();
                 // Load existing encrypted players if file exists, otherwise create new list
                 if (File.Exists(filePath))
                 {
                     var fileContent = File.ReadAllText(filePath);
-                    encryptedPlayers = JsonSerializer.Deserialize<List<EncryptedPlayerFile>>(fileContent) ?? new List<EncryptedPlayerFile>();
-                }
-                else
-                {
-                    encryptedPlayers = new List<EncryptedPlayerFile>();
-                }
-
-                // Check for duplicate username
-                foreach (var encryptedPlayer in encryptedPlayers)
-                {
-                    var decryptedSecondJson = CryptoHelper.Decrypt(encryptedPlayer.EncryptedData);
-                    var secondJsonObj = JsonSerializer.Deserialize<Dictionary<string, string>>(decryptedSecondJson);
-                    if (secondJsonObj != null)
+                    if (fileContent!="")
                     {
-                        var decryptedUserName = CryptoHelper.Decrypt(secondJsonObj["UserName"]);
-                        if (string.Equals(decryptedUserName, player.UserName, StringComparison.OrdinalIgnoreCase))
+                        try
                         {
-                            error = "Username already exists.";
-                            return false;
-                        }
-                    }
-                }
+                            encryptedPlayers = JsonSerializer.Deserialize<List<EncryptedPlayerFile>>(fileContent) ?? new List<EncryptedPlayerFile>();
 
+                            // Check for duplicate username
+
+                            foreach (var encryptedPlayer in encryptedPlayers)
+                            {
+                                var decryptedSecondJson = CryptoHelper.Decrypt(encryptedPlayer.EncryptedData);
+                                var secondJsonObj = JsonSerializer.Deserialize<Dictionary<string, string>>(decryptedSecondJson);
+                                if (secondJsonObj != null)
+                                {
+                                    var decryptedUserName = CryptoHelper.Decrypt(secondJsonObj["UserName"]);
+                                    if (string.Equals(decryptedUserName, player.UserName, StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        error = "Username already exists.";
+                                        return false;
+                                    }
+                                }
+                            }
+                        }
+                        catch (Exception)
+                        {
+
+                        }
+                       
+
+                    }
+                    
+                }
+               
+                    // If no players exist, create a new list
+
+                
                 // Prepare the encrypted player data
                 var secondJsonObjNew = new Dictionary<string, string>
                 {

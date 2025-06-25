@@ -19,12 +19,17 @@
 
 <div class="main-content">
     <div class="left-panel">
-
         <div class="body-image-crop"></div>
-
     </div>
     <div class="right-panel">
-        <p class="status-description">🩺 @GetCombinedStatusDescription()</p>
+        @if (isSessionLoaded)
+        {
+            <p class="status-description">🩺 @GetCombinedStatusDescription()</p>
+        }
+        else
+        {
+            <p class="status-description">Loading status...</p>
+        }
     </div>
 </div>
 
@@ -39,11 +44,12 @@
     private string? apiUrl;
     private bool showWarningBar = false;
     private List<string> warnings = new();
+    private bool isSessionLoaded = false;
 
     protected override async Task OnInitializedAsync()
     {
         await UserSession.LoadSessionAsync();
-
+        isSessionLoaded = true;
         // Check if CharGuid is null or empty
         if (UserSession.CharGuid == null || UserSession.CharGuid == Guid.Empty)
         {
@@ -81,22 +87,8 @@
         var c = UserSession.activeChar;
         if (c == null) return;
 
-        if (c.HP < 21)
-            warnings.Add("Badly injured");
-
-        if (c.Fatigue < 21)
-            warnings.Add("Severe fatigue");
-
-        if (c.Stamina < 21)
-            warnings.Add("Severe exhaustion");
-
-        if (c.Sleep < 21)
-            warnings.Add("Severe sleep deprivation");
-
-        if (warnings.Count > 0)
-            showWarningBar = true;
-        else
-            showWarningBar = false;
+        warnings.AddRange(c.GetWarnings());
+        showWarningBar = warnings.Count > 0;
     }
 
     private async Task OnCharacterCreated(Character character)
@@ -116,13 +108,14 @@
 
     private string GetCombinedStatusDescription()
     {
+        var warmth = Character.GetBodyWarmthDescription(UserSession.activeChar?.BodyWarmth ?? 100);
         var fatigue = CharacterStatusDescriptions.GetFatigueDescription(UserSession.activeChar?.Fatigue ?? 100);
         var stamina = CharacterStatusDescriptions.GetStaminaDescription(UserSession.activeChar?.Stamina ?? 100);
         var hunger = CharacterStatusDescriptions.GetHungerDescription(UserSession.activeChar?.Hunger ?? 100);
         var sleep = CharacterStatusDescriptions.GetSleepDescription(UserSession.activeChar?.Sleep ?? 100);
         var condition = CharacterStatusDescriptions.GetConditionDescription(UserSession.activeChar?.Condition ?? CharacterCondition.Healthy);
 
-        return $"{fatigue} {stamina} {hunger} {sleep} {condition}";
+        return $"You feel;{warmth} {fatigue} {stamina} {hunger} {sleep} {condition}";
     }
 }
 

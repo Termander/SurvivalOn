@@ -16,6 +16,7 @@ namespace SurvivalCL
 
         public static string Encrypt(string plainText)
         {
+            /*
             using var aes = Aes.Create();
             aes.Key = Key;
             aes.IV = IV;
@@ -24,11 +25,13 @@ namespace SurvivalCL
             using (var cs = new CryptoStream(ms, encryptor, CryptoStreamMode.Write))
             using (var sw = new StreamWriter(cs))
                 sw.Write(plainText);
-            return Convert.ToBase64String(ms.ToArray());
+            return Convert.ToBase64String(ms.ToArray());*/
+            return plainText;
         }
 
         public static string Decrypt(string cipherText)
         {
+            /*
             var buffer = Convert.FromBase64String(cipherText);
             using var aes = Aes.Create();
             aes.Key = Key;
@@ -38,6 +41,8 @@ namespace SurvivalCL
             using var cs = new CryptoStream(ms, decryptor, CryptoStreamMode.Read);
             using var sr = new StreamReader(cs);
             return sr.ReadToEnd();
+            */
+            return cipherText;
         }
     }
 }

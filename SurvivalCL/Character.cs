@@ -35,8 +35,19 @@ namespace SurvivalCL
         public int Wisdom { get; set; }
         public int Charisma { get; set; }
 
+        // Experience and Level
+        public int Experience { get; set; }
+        public int Level => CalculateLevel(Experience);
+
+        // Traits (example: "Tough", "Resilient", etc.)
+        public List<string> Traits { get; set; } = new();
+
+        // Proficiency experience and levels
+        public Dictionary<string, int> ProficiencyExperience { get; set; } = new();
+        public Dictionary<string, int> ProficiencyLevels { get; set; } = new();
+
         // State
-        public int MaxHP { get; set; } = 100; // Default max HP
+        public int MaxHP => CalculateMaxHP();
         private int _hp;
         public int HP
         {
@@ -79,16 +90,11 @@ namespace SurvivalCL
             set => _bodyWarmth = value;
         }
         public CharacterCondition Condition { get; set; } = CharacterCondition.Healthy;
-        public int Experience { get; set; }
-
-        // Proficiency levels: key = proficiency name, value = level
-        public Dictionary<string, int> ProficiencyLevels { get; set; } = new();
 
         public Character(CharacterType type, string name)
         {
             Type = type;
             Name = name;
-            MaxHP = 100;
             HP = MaxHP;
             Fatigue = 100;
             Stamina = 100;
@@ -97,21 +103,58 @@ namespace SurvivalCL
             BodyWarmth = 100;
         }
 
-        // Add or update a proficiency level
-        public void SetProficiencyLevel(string name, int level)
+        // Level calculation (example: every 1000 XP = 1 level, min level 1)
+        private int CalculateLevel(int xp)
         {
-            ProficiencyLevels[name] = level;
+            return Math.Max(1, xp / 1000 + 1);
         }
 
-        // Get proficiency level (0 if not present)
+        // Proficiency level calculation (example: every 250 XP = 1 level, min level 1)
         public int GetProficiencyLevel(string name)
         {
-            return ProficiencyLevels.TryGetValue(name, out var level) ? level : 0;
+            if (!ProficiencyExperience.TryGetValue(name, out var xp))
+                return 1;
+            return Math.Max(1, xp / 250 + 1);
         }
 
-        public static void SaveCharacterToFile(Character character, GameState? gameState   )
+        // Add experience to a proficiency
+        public void AddProficiencyExperience(string name, int xp)
         {
-            if(gameState == null)
+            if (!ProficiencyExperience.ContainsKey(name))
+                ProficiencyExperience[name] = 0;
+            ProficiencyExperience[name] += xp;
+        }
+
+        // Add a trait
+        public void AddTrait(string trait)
+        {
+            if (!Traits.Contains(trait))
+                Traits.Add(trait);
+        }
+
+        // Calculate MaxHP based on Constitution, Level, Proficiencies, and Traits
+        private int CalculateMaxHP()
+        {
+            int baseHp = 50 + Constitution * 2 + (Level - 1) * 5;
+
+            // Example: "Endurance" proficiency adds 2 HP per level
+            int enduranceLevel = GetProficiencyLevel("Endurance");
+            baseHp += enduranceLevel * 2;
+
+            // Example: "Tough" trait adds 10 HP
+            if (Traits.Contains("Tough"))
+                baseHp += 10;
+
+            // Example: "Resilient" trait adds 5 HP
+            if (Traits.Contains("Resilient"))
+                baseHp += 5;
+
+            return baseHp;
+        }
+
+        public static void SaveCharacterToFile(Character character, GameState? gameState)
+        {
+            if (gameState == null)
                 gameState = new GameState(true); // Create a new GameState if not provided
 
             string directory = "DynamicData/Character/" + character.Id;
@@ -168,6 +211,20 @@ namespace SurvivalCL
             }
         }
 
+
+        public List<string> GetWarnings()
+        {
+            var warnings = new List<string>();
+            if (HP < 21)
+                warnings.Add("Badly injured");
+            if (Fatigue < 21)
+                warnings.Add("Severe fatigue");
+            if (Stamina < 21)
+                warnings.Add("Severe exhaustion");
+            if (Sleep < 21)
+                warnings.Add("Severe sleep deprivation");
+            return warnings;
+        }
         public static string GetBodyWarmthDescription(int warmth)
         {
             if (warmth < -40) return "You are frozen solid, life is slipping away with every second.";
@@ -235,7 +292,7 @@ namespace SurvivalCL
             // You can expand this logic for more nuanced effects
         }
     }
- 
+
     public class CharacterGameStateWrapper
     {
         public Character Character { get; set; } = null!;
@@ -243,76 +300,76 @@ namespace SurvivalCL
     }
 
     public static class CharacterStatusDescriptions
-{
-    public static string GetFatigueDescription(int fatigue)
     {
-        if (fatigue >= 91) return "You feel invigorated, as if you could conquer mountains.";
-        if (fatigue >= 81) return "A spring in your step and a clear mind—fatigue is a distant memory.";
-        if (fatigue >= 71) return "You move with purpose, only a hint of weariness in your limbs.";
-        if (fatigue >= 61) return "A gentle tiredness tugs at you, but you press on with ease.";
-        if (fatigue >= 51) return "Your muscles ache slightly, and you long for a moment's rest.";
-        if (fatigue >= 41) return "Fatigue weighs on you, slowing your movements and dulling your senses.";
-        if (fatigue >= 31) return "Every action feels heavier, your body yearning for respite.";
-        if (fatigue >= 21) return "Exhaustion gnaws at your will, each step a test of resolve.";
-        if (fatigue >= 11) return "You stagger, vision blurring, as your strength nearly fails you.";
-        return "Utterly spent, you collapse, unable to continue without rest.";
-    }
-
-    public static string GetStaminaDescription(int stamina)
-    {
-        if (stamina >= 91) return "Energy surges through you, ready for any challenge.";
-        if (stamina >= 81) return "You feel robust, able to take on strenuous tasks with ease.";
-        if (stamina >= 71) return "Your stamina is strong, though you sense it slowly waning.";
-        if (stamina >= 61) return "You can keep going, but a break would be welcome.";
-        if (stamina >= 51) return "You’re starting to feel the burn, but you push through.";
-        if (stamina >= 41) return "Your body protests, each effort more taxing than the last.";
-        if (stamina >= 31) return "You move sluggishly, your reserves running low.";
-        if (stamina >= 21) return "Every movement is a struggle, your stamina nearly depleted.";
-        if (stamina >= 11) return "You gasp for breath, barely able to continue.";
-        return "Your body gives out, unable to muster the strength to go on.";
-    }
-
-    public static string GetHungerDescription(int hunger)
-    {
-        if (hunger >= 91) return "You are well-fed and content, ready for anything.";
-        if (hunger >= 81) return "A pleasant fullness lingers, hunger is but a memory.";
-        if (hunger >= 71) return "You feel satisfied, though a snack wouldn’t hurt.";
-        if (hunger >= 61) return "A mild hunger stirs, but you remain focused.";
-        if (hunger >= 51) return "Your stomach rumbles, reminding you it’s time to eat.";
-        if (hunger >= 41) return "Hunger distracts you, sapping your concentration.";
-        if (hunger >= 31) return "You feel weak, your body craving nourishment.";
-        if (hunger >= 21) return "Starvation sets in, your strength fading fast.";
-        if (hunger >= 11) return "You are dizzy and frail, desperate for food.";
-        return "On the brink of collapse, you can barely move from hunger.";
-    }
-
-    public static string GetSleepDescription(int sleep)
-    {
-        if (sleep >= 91) return "You are wide awake, mind sharp and alert.";
-        if (sleep >= 81) return "Rested and refreshed, you greet the day with vigor.";
-        if (sleep >= 71) return "You feel good, though a nap would be welcome.";
-        if (sleep >= 61) return "A gentle drowsiness creeps in, but you remain attentive.";
-        if (sleep >= 51) return "You yawn, eyelids heavy, longing for sleep.";
-        if (sleep >= 41) return "Fatigue clouds your mind, focus slipping away.";
-        if (sleep >= 31) return "You struggle to stay awake, thoughts muddled by exhaustion.";
-        if (sleep >= 21) return "Sleep deprivation takes its toll, your body begging for rest.";
-        if (sleep >= 11) return "You are barely conscious, fighting to keep your eyes open.";
-        return "Sleep claims you, and you drift into unconsciousness.";
-    }
-
-    public static string GetConditionDescription(CharacterCondition condition)
-    {
-        return condition switch
+        public static string GetFatigueDescription(int fatigue)
         {
-            CharacterCondition.Healthy => "You are in peak condition, ready to face whatever comes your way.",
-            CharacterCondition.Tired => "Weariness drapes over you, slowing your every move.",
-            CharacterCondition.Dizzy => "The world spins, your balance and focus slipping away.",
-            CharacterCondition.Sick => "Illness wracks your body, draining your strength and resolve.",
-            CharacterCondition.Surprised => "You are caught off guard, scrambling to react.",
-            CharacterCondition.Motivated => "A surge of inspiration fills you, driving you to excel.",
-            CharacterCondition.Unconscious => "You are lost to the world, senses and will faded into darkness.",
-            _ => "You feel... indescribable."
-        };
+            if (fatigue >= 91) return "You feel invigorated, as if you could conquer mountains.";
+            if (fatigue >= 81) return "A spring in your step and a clear mind—fatigue is a distant memory.";
+            if (fatigue >= 71) return "You move with purpose, only a hint of weariness in your limbs.";
+            if (fatigue >= 61) return "A gentle tiredness tugs at you, but you press on with ease.";
+            if (fatigue >= 51) return "Your muscles ache slightly, and you long for a moment's rest.";
+            if (fatigue >= 41) return "Fatigue weighs on you, slowing your movements and dulling your senses.";
+            if (fatigue >= 31) return "Every action feels heavier, your body yearning for respite.";
+            if (fatigue >= 21) return "Exhaustion gnaws at your will, each step a test of resolve.";
+            if (fatigue >= 11) return "You stagger, vision blurring, as your strength nearly fails you.";
+            return "Utterly spent, you collapse, unable to continue without rest.";
+        }
+
+        public static string GetStaminaDescription(int stamina)
+        {
+            if (stamina >= 91) return "Energy surges through you, ready for any challenge.";
+            if (stamina >= 81) return "You feel robust, able to take on strenuous tasks with ease.";
+            if (stamina >= 71) return "Your stamina is strong, though you sense it slowly waning.";
+            if (stamina >= 61) return "You can keep going, but a break would be welcome.";
+            if (stamina >= 51) return "You’re starting to feel the burn, but you push through.";
+            if (stamina >= 41) return "Your body protests, each effort more taxing than the last.";
+            if (stamina >= 31) return "You move sluggishly, your reserves running low.";
+            if (stamina >= 21) return "Every movement is a struggle, your stamina nearly depleted.";
+            if (stamina >= 11) return "You gasp for breath, barely able to continue.";
+            return "Your body gives out, unable to muster the strength to go on.";
+        }
+
+        public static string GetHungerDescription(int hunger)
+        {
+            if (hunger >= 91) return "You are well-fed and content, ready for anything.";
+            if (hunger >= 81) return "A pleasant fullness lingers, hunger is but a memory.";
+            if (hunger >= 71) return "You feel satisfied, though a snack wouldn’t hurt.";
+            if (hunger >= 61) return "A mild hunger stirs, but you remain focused.";
+            if (hunger >= 51) return "Your stomach rumbles, reminding you it’s time to eat.";
+            if (hunger >= 41) return "Hunger distracts you, sapping your concentration.";
+            if (hunger >= 31) return "You feel weak, your body craving nourishment.";
+            if (hunger >= 21) return "Starvation sets in, your strength fading fast.";
+            if (hunger >= 11) return "You are dizzy and frail, desperate for food.";
+            return "On the brink of collapse, you can barely move from hunger.";
+        }
+
+        public static string GetSleepDescription(int sleep)
+        {
+            if (sleep >= 91) return "You are wide awake, mind sharp and alert.";
+            if (sleep >= 81) return "Rested and refreshed, you greet the day with vigor.";
+            if (sleep >= 71) return "You feel good, though a nap would be welcome.";
+            if (sleep >= 61) return "A gentle drowsiness creeps in, but you remain attentive.";
+            if (sleep >= 51) return "You yawn, eyelids heavy, longing for sleep.";
+            if (sleep >= 41) return "Fatigue clouds your mind, focus slipping away.";
+            if (sleep >= 31) return "You struggle to stay awake, thoughts muddled by exhaustion.";
+            if (sleep >= 21) return "Sleep deprivation takes its toll, your body begging for rest.";
+            if (sleep >= 11) return "You are barely conscious, fighting to keep your eyes open.";
+            return "Sleep claims you, and you drift into unconsciousness.";
+        }
+
+        public static string GetConditionDescription(CharacterCondition condition)
+        {
+            return condition switch
+            {
+                CharacterCondition.Healthy => "You are in peak condition, ready to face whatever comes your way.",
+                CharacterCondition.Tired => "Weariness drapes over you, slowing your every move.",
+                CharacterCondition.Dizzy => "The world spins, your balance and focus slipping away.",
+                CharacterCondition.Sick => "Illness wracks your body, draining your strength and resolve.",
+                CharacterCondition.Surprised => "You are caught off guard, scrambling to react.",
+                CharacterCondition.Motivated => "A surge of inspiration fills you, driving you to excel.",
+                CharacterCondition.Unconscious => "You are lost to the world, senses and will faded into darkness.",
+                _ => "You feel... indescribable."
+            };
+        }
     }
-}
 }
