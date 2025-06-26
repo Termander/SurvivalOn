@@ -18,28 +18,32 @@
     "Oriantation": "C"
   },
   {
-    "TileSetName": "tileset_96x128.png",
-    "TileType": "Grass",
+    "TilePath": "Autotiles/Waters/Waters - 0005.png",
+    "TileType": "Water",
     "X": 64,
     "Y": 0,
     "Width": 32,
-    "Height": 32
+    "Height": 32,
+    "Oriantation": "C"
   },
   {
-    "TileSetName": "tileset_96x128.png",
-    "TileType": "Forest",
+    "TilePath": "Autotiles/Waters/Waters - 0005.png",
+    "TileType": "Water-Beach",
     "X": 0,
     "Y": 32,
     "Width": 32,
-    "Height": 32
+    "Height": 32,
+    "Oriantation": "NW"
+
   },
   {
-    "TileSetName": "tileset_96x128.png",
-    "TileType": "River",
+    "TilePath": "Autotiles/Waters/Waters - 0005.png",
+    "TileType": "Water-Beach",
     "X": 32,
     "Y": 32,
     "Width": 32,
-    "Height": 32
+    "Height": 32,
+    "Oriantation": "N"
   },
   {
     "TileSetName": "tileset_96x128.png",
