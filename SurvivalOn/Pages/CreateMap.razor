@@ -1,0 +1,67 @@
+@page "/createmap"
+
+@inject HttpClient Http
+@inject IConfiguration Configuration
+
+@using SurvivalOn.Models
+
+<PageTitle>Create Map</PageTitle>
+
+<h3>Create Procedural Island Map</h3>
+
+<div class="mb-3">
+    <button class="btn btn-primary" @onclick="GenerateMapAsync">Generate New Island Map</button>
+</div>
+
+@if (mapTiles != null)
+{
+    @* <div class="map-grid">
+        @for (int y = 0; y < MapSize; y++)
+        {
+            <div class="map-row">
+                @for (int x = 0; x < MapSize; x++)
+                {
+                    <span class="map-tile" title="@GetTileType(mapTiles[x, y])">
+                        @mapTiles[x, y]?.TileId.ToString()
+                    </span>
+                } 
+            </div>
+        }
+    </div> *@
+}
+
+@code {
+    private const int MapSize = 24; // 12 sectors * 2 tiles per sector
+    private MapTile[,]? mapTiles;
+    private string? apiUrl;
+
+    private async Task GenerateMapAsync()
+    {
+        
+        apiUrl = Configuration["Api:BaseUrlMapCreation"];
+        //var response = await Http.PostAsync("api/Map/generate", null);
+        var response = await Http.GetAsync($"{apiUrl}");
+        if (response.IsSuccessStatusCode)
+        {
+            var mapList = await response.Content.ReadFromJsonAsync<List<MapTile>>();
+            if (mapList != null)
+            {
+                // Convert flat list to 2D array
+                mapTiles = new MapTile[MapSize, MapSize];
+                foreach (var tile in mapList)
+                {
+                    if (tile.X < MapSize && tile.Y < MapSize)
+                        mapTiles[tile.X, tile.Y] = tile;
+                }
+            }
+        }
+    }
+
+    private string GetTileType(MapTile? tile)
+    {
+        if (tile == null) return "";
+        return tile.TileId.ToString();
+    }
+
+   
+}

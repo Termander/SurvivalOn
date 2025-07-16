@@ -1,0 +1,22 @@
+.map-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-top: 16px;
+}
+.map-row {
+    display: flex;
+    gap: 2px;
+}
+.map-tile {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    text-align: center;
+    vertical-align: middle;
+    background: #e0e7ef;
+    border: 1px solid #2563eb;
+    border-radius: 2px;
+    font-size: 1em;
+    line-height: 20px;
+}
