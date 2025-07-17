@@ -29,8 +29,13 @@ public class IslandMapGenerator
     public class MapTile
     {
         public int TileId { get; set; }
-        public int X { get; set; }
-        public int Y { get; set; }
+        public int X { get; set; }          // Position on map
+        public int Y { get; set; }          // Position on map
+        public int ImageX { get; set; }     // Position in source image
+        public int ImageY { get; set; }     // Position in source image
+        public int Width { get; set; }
+        public int Height { get; set; }
+        public string? TileType { get; set; }
     }
 
     public static MapTile[,] GenerateIslandMap(string jsonPath)
@@ -98,7 +103,12 @@ public class IslandMapGenerator
                             {
                                 TileId = chosenTile.Id,
                                 X = mx,
-                                Y = my
+                                Y = my,
+                                ImageX = chosenTile.X,      // from JSON, image coordinate
+                                ImageY = chosenTile.Y,      // from JSON, image coordinate
+                                Width = chosenTile.Width,
+                                Height = chosenTile.Height,
+                                TileType = chosenTile.TileType
                             };
                         }
                     }

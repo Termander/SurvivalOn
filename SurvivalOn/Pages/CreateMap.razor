@@ -13,47 +13,77 @@
     <button class="btn btn-primary" @onclick="GenerateMapAsync">Generate New Island Map</button>
 </div>
 
-@if (mapTiles != null)
+@if (mapTiles != null && tilePath != null)
 {
-    @* <div class="map-grid">
+    <div class="map-grid" style="position:relative; width:@(MapSize*tileSize)px; height:@(MapSize*tileSize)px;">
         @for (int y = 0; y < MapSize; y++)
         {
-            <div class="map-row">
-                @for (int x = 0; x < MapSize; x++)
+            for (int x = 0; x < MapSize; x++)
+            {
+                var tile = mapTiles[x, y];
+                if (tile != null)
                 {
-                    <span class="map-tile" title="@GetTileType(mapTiles[x, y])">
-                        @mapTiles[x, y]?.TileId.ToString()
-                    </span>
-                } 
-            </div>
+                    <div class="map-tile"
+                         style="
+                            position:absolute;
+                            left:@(tile.X * tile.Width)px;
+                            top:@(tile.Y * tile.Height)px;
+                            width:@tile.Width}px;
+                            height:@tile.Height}px;
+                            background-image:url('@tilePath');
+                            background-position:-@(tile.ImageX)px -@(tile.ImageY)px;
+                            background-size:auto;
+                            border:1px solid #ccc;"
+                         title="@tile.TileType">
+                    </div>
+                }
+            }
         }
-    </div> *@
+    </div>
 }
 
 @code {
-    private const int MapSize = 24; // 12 sectors * 2 tiles per sector
+    private const int MapSize = 24;
+    private int tileSize = 16;
     private MapTile[,]? mapTiles;
     private string? apiUrl;
+    private string? tilePath;
 
     private async Task GenerateMapAsync()
     {
-        
+
         apiUrl = Configuration["Api:BaseUrlMapCreation"];
-        //var response = await Http.PostAsync("api/Map/generate", null);
         var response = await Http.GetAsync($"{apiUrl}");
         if (response.IsSuccessStatusCode)
         {
-            var mapList = await response.Content.ReadFromJsonAsync<List<MapTile>>();
-            if (mapList != null)
+            try
             {
-                // Convert flat list to 2D array
-                mapTiles = new MapTile[MapSize, MapSize];
-                foreach (var tile in mapList)
+                // Clear existing map tiles
+                mapTiles = null;
+
+                //var mapResponse = await response.Content.ReadFromJsonAsync<MapResponseDto>();
+                //var mapList = await response.Content.ReadFromJsonAsync<List<MapTile>>();
+                var mapResponse = await response.Content.ReadFromJsonAsync<MapResponseDto>();
+                if (mapResponse?.MapList != null)
                 {
-                    if (tile.X < MapSize && tile.Y < MapSize)
-                        mapTiles[tile.X, tile.Y] = tile;
+                    tilePath = mapResponse.TilePath;
+                    mapTiles = new MapTile[MapSize, MapSize];
+                    foreach (var tile in mapResponse.MapList)
+                    {
+                        if (tile.X < MapSize && tile.Y < MapSize)
+                            mapTiles[tile.X, tile.Y] = tile;
+                    }
                 }
             }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error clearing map tiles: {ex.Message}");
+            }
+        }
+
+        if (mapTiles != null && mapTiles[0, 0] != null)
+        {
+            tileSize = mapTiles[0, 0].Width;
         }
     }
 
@@ -63,5 +93,5 @@
         return tile.TileId.ToString();
     }
 
-   
+
 }
